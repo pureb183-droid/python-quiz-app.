@@ -117,7 +117,7 @@ def get_level(percentage):
     elif percentage >= 40: return "Канааттандырарлык (Beginner)"
     else: return "Төмөн (A1)"
 
-# Башкаруу панели
+# Капталдагы навигация
 page = st.sidebar.radio("Панелди тандаңыз:", ["Окуучулар үчүн (Тест)", "Мугалим үчүн (Жыйынтык тактасы)"])
 
 # ----------------- ОКУУЧУНУН ПАНЕЛИ -----------------
@@ -128,7 +128,7 @@ if page == "Окуучулар үчүн (Тест)":
     if "user_fio" not in st.session_state:
         with st.form("reg_form"):
             st.subheader("📝 Тестке катталуу / Кирүү")
-            l_name = st.text_input("Fazмилияңыз:").strip()
+            l_name = st.text_input("Фамилияңыз:").strip()
             f_name = st.text_input("Атыңыз:").strip()
             m_name = st.text_input("Атасынын аты (болсо):").strip()
             student_class = st.text_input("Классыңыз (мисалы: 9-А, 11-Б):").strip()
