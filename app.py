@@ -4,34 +4,69 @@ import os
 from datetime import datetime
 
 # Негизги жөндөөлөр
-st.set_page_config(page_title="Python Тести", layout="wide")
+st.set_page_config(page_title="Python Тести & Аналитика", layout="wide")
 
-# Сайтты кооздоо үчүн стилдер
+# Сайтты толугу менен 3D жана кооз түстөр менен жасалгалоо (CSS)
 st.markdown("""
 <style>
-    .stButton>button {
-        background-color: #4CAF50; color: white; border-radius: 8px;
-        padding: 10px 24px; font-weight: bold; border: none;
+    /* Негизги фон */
+    .main { background-color: #f0f2f6; }
+    
+    /* 3D Көлөмдүү Карточкалар (Неоморфизм) */
+    .card-3d {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 25px;
+        margin: 10px 0px;
+        box-shadow: 6px 6px 12px #c5c9d1, -6px -6px 12px #ffffff;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.2);
     }
+    .card-title { color: #5a67d8; font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+    .card-value { color: #2d3748; font-size: 32px; font-weight: 900; }
+    
+    /* Кооз Кнопкалар */
+    .stButton>button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white; border-radius: 12px; padding: 12px 28px;
+        font-weight: bold; border: none;
+        box-shadow: 3px 3px 8px #b8b8b8, -3px -3px 8px #ffffff;
+        transition: all 0.2s ease-in-out;
+    }
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 5px 5px 12px #9c9c9c, -5px -5px 12px #ffffff;
+    }
+    
+    /* Сертификаттын дизайны */
     .cert-box {
-        border: 10px double #2c3e50; padding: 40px; text-align: center;
-        background-color: #ffffff; border-radius: 15px;
+        border: 12px double #4a5568; padding: 45px; text-align: center;
+        background: #ffffff; border-radius: 20px;
+        box-shadow: 10px 10px 25px rgba(0,0,0,0.1);
+        max-width: 750px; margin: 30px auto;
     }
     .stage-header {
-        background-color: #e3f2fd; padding: 12px; border-radius: 8px;
-        color: #0d47a1; font-weight: bold; margin-bottom: 20px;
+        background: linear-gradient(90deg, #ebf8ff 0%, #bee3f8 100%);
+        padding: 15px; border-radius: 10px;
+        color: #2b6cb0; font-weight: bold; margin-bottom: 25px;
+        border-left: 5px solid #3182ce;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Жыйынтыктар сакталуучу файл базасы
+# Базаны түзүү
 DB_FILE = "quiz_database.csv"
 if not os.path.exists(DB_FILE):
     columns_list = ["ФИО", "Класс", "Убактысы", "Туура жооп", "Процент (%)", "Деңгээли", "Учурдагы_Этап", "Жооптор"]
     pd.DataFrame(columns=columns_list).to_csv(DB_FILE, index=False)
 
 def load_db():
-    return pd.read_csv(DB_FILE)
+    if os.path.exists(DB_FILE):
+        try:
+            return pd.read_csv(DB_FILE)
+        except:
+            return pd.DataFrame(columns=["ФИО", "Класс", "Убактысы", "Туура жооп", "Процент (%)", "Деңгээли", "Учурдагы_Этап", "Жооптор"])
+    return pd.DataFrame(columns=["ФИО", "Класс", "Убактысы", "Туура жооп", "Процент (%)", "Деңгээли", "Учурдагы_Этап", "Жооптор"])
 
 def save_to_db(fio, clazz, time_str, score_str, percent, level, stage, answers_str):
     df = load_db()
@@ -42,7 +77,7 @@ def save_to_db(fio, clazz, time_str, score_str, percent, level, stage, answers_s
         df = pd.concat([df, new_row], ignore_index=True)
     df.to_csv(DB_FILE, index=False)
 
-# 50 суроонун тизмеси
+# 50 суроонун базасы
 QUESTIONS = [
     {"q": "Pythonдо кайсы өзгөрмөнүн аты ката жазылган?", "options": ["my_var", "_age", "userAge", "1st_place"], "answer": "1st_place"},
     {"q": "Pythonдо 5 / 2 туюнтмасы кандай типти кайтарат?", "options": ["int", "float", "str", "bool"], "answer": "float"},
@@ -91,7 +126,7 @@ QUESTIONS = [
     {"q": "Объекттин маалымат тибин билүүчү функция кайсы?", "options": ["type()", "id()", "isinstance()", "typeof()"], "answer": "type()"},
     {"q": "Объекттин уникалдуу номердик кодун (ID) алуучу функция?", "options": ["type()", "id()", "hex()", "hash()"], "answer": "id()"},
     {"q": "Глобалдык өзгөрмөнү функция ичинде өзгөртүүчү сөз?", "options": ["global", "local", "public", "static"], "answer": "global"},
-    {"q": "Функция өзүн-өзү чакырса, бул процесс кандай аталат?", "options": ["Цикл", "Итерация", "Рекурсия", "Инкапсуляция"], "answer": "Рекурсия"},
+    {"q": "Pythonдо функция өзүн-өзү чакырса, бул процесс кандай аталат?", "options": ["Цикл", "Итерация", "Рекурсия", "Инкапсуляция"], "answer": "Рекурсия"},
     {"q": "Тизмени тескери тартипте жайгаштыруучу метод?", "options": ["sort()", "reverse()", "invert()", "flip()"], "answer": "reverse()"},
     {"q": "Тизмеде жок индексти чакырганда кандай ката чыгат?", "options": ["KeyError", "IndexError", "ValueError", "NameError"], "answer": "IndexError"}
 ]
@@ -99,39 +134,3 @@ QUESTIONS = [
 def get_level(percentage):
     if percentage >= 85: return "Мыкты (Advanced)"
     elif percentage >= 65: return "Жакшы (Intermediate)"
-    elif percentage >= 40: return "Канааттандырарлык (Beginner)"
-    else: return "Төмөн (A1)"
-
-# Капталдагы меню
-page = st.sidebar.radio("Панелди тандаңыз:", ["Окуучулар үчүн (Тест)", "Мугалим үчүн (Жыйынтык тактасы)"])
-
-# Коопсуз глобалдык эстутум
-if "fio_auth" not in st.session_state:
-    st.session_state.fio_auth = ""
-if "class_auth" not in st.session_state:
-    st.session_state.class_auth = ""
-if "stage_auth" not in st.session_state:
-    st.session_state.stage_auth = 1
-if "answers_auth" not in st.session_state:
-    st.session_state.answers_auth = {}
-
-# ----------------- ОКУУЧУНУН ПАНЕЛИ -----------------
-if page == "Окуучулар үчүн (Тест)":
-    st.title("🎓 Python Программалоо Тили Боюнча Тест системасы")
-    
-    if st.session_state.fio_auth == "":
-        st.subheader("📝 Тестке катталуу / Кирүү")
-        l_name = st.text_input("Фамилияңыз:").strip()
-        f_name = st.text_input("Атыңыз:").strip()
-        student_class = st.text_input("Классыңыз (мисалы: 9-А):").strip()
-        
-        if st.button("🚀 Тестке кирүү"):
-            if l_name and f_name and student_class:
-                full_name = f"{l_name} {f_name}".strip()
-                st.session_state.fio_auth = full_name
-                st.session_state.class_auth = student_class
-                
-                df = load_db()
-                match = df[df["ФИО"] == full_name]
-                if len(match) > 0:
-                    st.session_state.stage_auth = int(match.iloc[0]["Учурдагы_Этап"])
