@@ -120,11 +120,21 @@ def get_level(percentage):
 # Башкаруу панели
 page = st.sidebar.radio("Панелди тандаңыз:", ["Окуучулар үчүн (Тест)", "Мугалим үчүн (Жыйынтык тактасы)"])
 
+# Глобалдык эстутумду даярдоо
+if "user_fio" not in st.session_state:
+    st.session_state.user_fio = None
+if "user_class" not in st.session_state:
+    st.session_state.user_class = None
+if "current_stage" not in st.session_state:
+    st.session_state.current_stage = 1
+if "user_answers" not in st.session_state:
+    st.session_state.user_answers = {}
+
 # ----------------- ОКУУЧУНУН ПАНЕЛИ -----------------
 if page == "Окуучулар үчүн (Тест)":
     st.title("🎓 Python Программалоо Тили Боюнча Тест системасы")
     
-    if "user_fio" not in st.session_state:
+    if st.session_state.user_fio is None:
         st.subheader("📝 Тестке катталуу / Кирүү")
         l_name = st.text_input("Фамилияңыз:").strip()
         f_name = st.text_input("Атыңыз:").strip()
@@ -133,12 +143,3 @@ if page == "Окуучулар үчүн (Тест)":
         
         if st.button("🚀 Тестти баштоо / Улантуу"):
             if l_name and f_name and student_class:
-                full_name = f"{l_name} {f_name} {m_name}".strip()
-                st.session_state.user_fio = full_name
-                st.session_state.user_class = student_class
-                
-                df = load_db()
-                match = df[df["ФИО"] == full_name]
-                
-                if not match.empty:
-                    user_row = match.iloc[0]
