@@ -117,24 +117,28 @@ def get_level(percentage):
     elif percentage >= 40: return "Канааттандырарлык (Beginner)"
     else: return "Төмөн (A1)"
 
-# Капталдагы навигация
+# Башкаруу панели
 page = st.sidebar.radio("Панелди тандаңыз:", ["Окуучулар үчүн (Тест)", "Мугалим үчүн (Жыйынтык тактасы)"])
 
 # ----------------- ОКУУЧУНУН ПАНЕЛИ -----------------
 if page == "Окуучулар үчүн (Тест)":
     st.title("🎓 Python Программалоо Тили Боюнча Тест системасы")
-    st.write("Сайтты жаап койсоңуз дагы, ФИОңузду кайра жазып кирсеңиз калган жерден улантып кете аласыз.")
     
     if "user_fio" not in st.session_state:
-        with st.form("reg_form"):
-            st.subheader("📝 Тестке катталуу / Кирүү")
-            l_name = st.text_input("Фамилияңыз:").strip()
-            f_name = st.text_input("Атыңыз:").strip()
-            m_name = st.text_input("Атасынын аты (болсо):").strip()
-            student_class = st.text_input("Классыңыз (мисалы: 9-А, 11-Б):").strip()
-            btn = st.form_submit_button("Тестти баштоо / Улантуу")
-            
-            if btn:
-                if l_name and f_name and student_class:
-                    full_name = f"{l_name} {f_name} {m_name}".strip()
-                    st.session_state.user_fio = full_name
+        st.subheader("📝 Тестке катталуу / Кирүү")
+        l_name = st.text_input("Фамилияңыз:").strip()
+        f_name = st.text_input("Атыңыз:").strip()
+        m_name = st.text_input("Атасынын аты (болсо):").strip()
+        student_class = st.text_input("Классыңыз (мисалы: 9-А, 11-Б):").strip()
+        
+        if st.button("🚀 Тестти баштоо / Улантуу"):
+            if l_name and f_name and student_class:
+                full_name = f"{l_name} {f_name} {m_name}".strip()
+                st.session_state.user_fio = full_name
+                st.session_state.user_class = student_class
+                
+                df = load_db()
+                match = df[df["ФИО"] == full_name]
+                
+                if not match.empty:
+                    user_row = match.iloc[0]
