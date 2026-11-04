@@ -3,22 +3,16 @@ import pandas as pd
 import os
 from datetime import datetime
 
-# Баракчанын негизги орнотуулары
-st.set_page_config(
-    page_title="Python Тести", 
-    layout="wide", 
-    initial_sidebar_state="expanded"
-)
+# Негизги жөндөөлөр
+st.set_page_config(page_title="Python Тести", layout="wide")
 
-# Түстөр жана стилдер
+# Сайтты кооздоо үчүн стилдер
 st.markdown("""
 <style>
-    .main { background-color: #f8f9fa; }
     .stButton>button {
         background-color: #4CAF50; color: white; border-radius: 8px;
-        padding: 10px 24px; font-weight: bold; border: none; transition: 0.3s;
+        padding: 10px 24px; font-weight: bold; border: none;
     }
-    .stButton>button:hover { background-color: #45a049; }
     .cert-box {
         border: 10px double #2c3e50; padding: 40px; text-align: center;
         background-color: #ffffff; border-radius: 15px;
@@ -30,12 +24,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Жыйынтыктарды сактай турган CSV файлдык база
+# Жыйынтыктар сакталуучу файл базасы
 DB_FILE = "quiz_database.csv"
 if not os.path.exists(DB_FILE):
     columns_list = ["ФИО", "Класс", "Убактысы", "Туура жооп", "Процент (%)", "Деңгээли", "Учурдагы_Этап", "Жооптор"]
-    df_empty = pd.DataFrame(columns=columns_list)
-    df_empty.to_csv(DB_FILE, index=False)
+    pd.DataFrame(columns=columns_list).to_csv(DB_FILE, index=False)
 
 def load_db():
     return pd.read_csv(DB_FILE)
@@ -45,15 +38,11 @@ def save_to_db(fio, clazz, time_str, score_str, percent, level, stage, answers_s
     if fio in df["ФИО"].values:
         df.loc[df["ФИО"] == fio, ["Класс", "Убактысы", "Туура жооп", "Процент (%)", "Деңгээли", "Учурдагы_Этап", "Жооптор"]] = [clazz, time_str, score_str, percent, level, stage, answers_str]
     else:
-        new_row = pd.DataFrame([{
-            "ФИО": fio, "Класс": clazz, "Убактысы": time_str,
-            "Туура жооп": score_str, "Процент (%)": percent, "Деңгээли": level,
-            "Учурдагы_Этап": stage, "Жооптор": answers_str
-        }])
+        new_row = pd.DataFrame([{"ФИО": fio, "Класс": clazz, "Убактысы": time_str, "Туура жооп": score_str, "Процент (%)": percent, "Деңгээли": level, "Учурдагы_Этап": stage, "Жооптор": answers_str}])
         df = pd.concat([df, new_row], ignore_index=True)
     df.to_csv(DB_FILE, index=False)
 
-# 50 суроонун базасы
+# 50 суроонун тизмеси
 QUESTIONS = [
     {"q": "Pythonдо кайсы өзгөрмөнүн аты ката жазылган?", "options": ["my_var", "_age", "userAge", "1st_place"], "answer": "1st_place"},
     {"q": "Pythonдо 5 / 2 туюнтмасы кандай типти кайтарат?", "options": ["int", "float", "str", "bool"], "answer": "float"},
@@ -65,7 +54,6 @@ QUESTIONS = [
     {"q": "Pythonдо 17 % 5 туюнтмасынын калдыгы канча?", "options": ["3", "2", "1", "5"], "answer": "2"},
     {"q": "Шарттуу операторду (эгерде) ачуучу ачкыч сөз кайсы?", "options": ["if", "else", "for", "while"], "answer": "if"},
     {"q": "Барабарлыкты текшерүүчү операторду көрсөтүңүз?", "options": ["=", "===", "is", "=="], "answer": "=="},
-    
     {"q": "Pythonдо логикалык 'ЖАНА' оператору кайсы?", "options": ["&&", "and", "AND", "not"], "answer": "and"},
     {"q": "Pythonдо логикалык 'ЖЕ' оператору кайсы сөз?", "options": ["||", "or", "OR", "xor"], "answer": "or"},
     {"q": "Кайсы маалымат тиби өзгөрүлбөйт (immutable)?", "options": ["list", "dict", "set", "tuple"], "answer": "tuple"},
@@ -76,7 +64,6 @@ QUESTIONS = [
     {"q": "Төмөнкүлөрдүн кайсынысы сөздүк (dictionary) болуп саналат?", "options": ["{1, 2}", "", "(1, 2)", "{'a': 1}"], "answer": "{'a': 1}"},
     {"q": "Сөздүктөн ачкычтарды алуучу метод кайсы?", "options": ["keys()", "values()", "items()", "get()"], "answer": "keys()"},
     {"q": "Жеке функция түзүү үчүн кайсы ачкыч сөз колдонулат?", "options": ["function", "fun", "def", "define"], "answer": "def"},
-    
     {"q": "Функциядан маани кайтаруучу ачкыч сөз?", "options": ["give", "return", "back", "exit"], "answer": "return"},
     {"q": "Python тили биринчи жолу кайсы жылы чыккан?", "options": ["1991", "2000", "1985", "1995"], "answer": "1991"},
     {"q": "Python тилинин автору ким?", "options": ["Гвидо ван Россум", "Джеймс Гослинг", "Деннис Ритчи", "Линус Торвальдс"], "answer": "Гвидо ван Россум"},
@@ -87,7 +74,6 @@ QUESTIONS = [
     {"q": "Циклди дароо токтотуп чыгуучу оператор кайсы?", "options": ["continue", "stop", "break", "exit"], "answer": "break"},
     {"q": "Циклдин кийинки айлануусуна дароо өткөрүүчү сөз?", "options": ["break", "continue", "pass", "next"], "answer": "continue"},
     {"q": "Эч кандай аракет аткарбаган бош оператор?", "options": ["None", "null", "pass", "void"], "answer": "pass"},
-    
     {"q": "Төмөнкүлөрдүн кайсынысы топтом (set) болуп саналат?", "options": ["{1, 2, 3}", "", "(1, 2, 3)", "set(1)"], "answer": "{1, 2, 3}"},
     {"q": "Топтомдордо (set) кайталануучу бирдей элементтер болобу?", "options": ["Ооба", "Жок", "Кээде гана", "Атайын шарт менен"], "answer": "Жок"},
     {"q": "Pythonдо файлды ачуучу камтылган функция?", "options": ["read()", "file()", "open()", "load()"], "answer": "open()"},
@@ -98,7 +84,6 @@ QUESTIONS = [
     {"q": "2 ** 3 туюнтмасынын жыйынтыгы канча болот?", "options": ["6", "8", "9", "5"], "answer": "8"},
     {"q": "Даяр китепканаларды кошуу үчүн кайсы сөз колдонулат?", "options": ["include", "require", "import", "using"], "answer": "import"},
     {"q": "Саптын бардык тамгаларын чоңойтуучу метод?", "options": ["upper()", "lower()", "capitalize()", "title()"], "answer": "upper()"},
-    
     {"q": "Саптын башындагы жана аягындагы боштуктарды тазалоочу метод?", "options": ["clean()", "strip()", "replace()", "split()"], "answer": "strip()"},
     {"q": "Сапты белгилүү бир бөлгүч менен тизмеге бөлүүчү метод?", "options": ["join()", "split()", "divide()", "slice()"], "answer": "split()"},
     {"q": "Математикалык функцияларды камтыган стандарттык модуль?", "options": ["math", "random", "os", "sys"], "answer": "math"},
@@ -117,29 +102,36 @@ def get_level(percentage):
     elif percentage >= 40: return "Канааттандырарлык (Beginner)"
     else: return "Төмөн (A1)"
 
-# Башкаруу панели
+# Капталдагы меню
 page = st.sidebar.radio("Панелди тандаңыз:", ["Окуучулар үчүн (Тест)", "Мугалим үчүн (Жыйынтык тактасы)"])
 
-# Глобалдык эстутумду даярдоо
-if "user_fio" not in st.session_state:
-    st.session_state.user_fio = None
-if "user_class" not in st.session_state:
-    st.session_state.user_class = None
-if "current_stage" not in st.session_state:
-    st.session_state.current_stage = 1
-if "user_answers" not in st.session_state:
-    st.session_state.user_answers = {}
+# Коопсуз глобалдык эстутум
+if "fio_auth" not in st.session_state:
+    st.session_state.fio_auth = ""
+if "class_auth" not in st.session_state:
+    st.session_state.class_auth = ""
+if "stage_auth" not in st.session_state:
+    st.session_state.stage_auth = 1
+if "answers_auth" not in st.session_state:
+    st.session_state.answers_auth = {}
 
 # ----------------- ОКУУЧУНУН ПАНЕЛИ -----------------
 if page == "Окуучулар үчүн (Тест)":
     st.title("🎓 Python Программалоо Тили Боюнча Тест системасы")
     
-    if st.session_state.user_fio is None:
+    if st.session_state.fio_auth == "":
         st.subheader("📝 Тестке катталуу / Кирүү")
         l_name = st.text_input("Фамилияңыз:").strip()
         f_name = st.text_input("Атыңыз:").strip()
-        m_name = st.text_input("Атасынын аты (болсо):").strip()
-        student_class = st.text_input("Классыңыз (мисалы: 9-А, 11-Б):").strip()
+        student_class = st.text_input("Классыңыз (мисалы: 9-А):").strip()
         
-        if st.button("🚀 Тестти баштоо / Улантуу"):
+        if st.button("🚀 Тестке кирүү"):
             if l_name and f_name and student_class:
+                full_name = f"{l_name} {f_name}".strip()
+                st.session_state.fio_auth = full_name
+                st.session_state.class_auth = student_class
+                
+                df = load_db()
+                match = df[df["ФИО"] == full_name]
+                if len(match) > 0:
+                    st.session_state.stage_auth = int(match.iloc[0]["Учурдагы_Этап"])
