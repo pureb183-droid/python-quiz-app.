@@ -53,7 +53,7 @@ def save_to_db(fio, clazz, time_str, score_str, percent, level, stage, answers_s
         df = pd.concat([df, new_row], ignore_index=True)
     df.to_csv(DB_FILE, index=False)
 
-# Узун саптар бузулбашы үчүн кыскартылган 50 суроонун базасы
+# 50 суроонун базасы
 QUESTIONS = [
     {"q": "Pythonдо кайсы өзгөрмөнүн аты ката жазылган?", "options": ["my_var", "_age", "userAge", "1st_place"], "answer": "1st_place"},
     {"q": "Pythonдо 5 / 2 туюнтмасы кандай типти кайтарат?", "options": ["int", "float", "str", "bool"], "answer": "float"},
@@ -61,7 +61,7 @@ QUESTIONS = [
     {"q": "Тизменин аягына элемент кошуучу метод кайсы?", "options": ["add()", "append()", "push()", "insert()"], "answer": "append()"},
     {"q": "print('A', 'B', sep='-') эмнени чыгарат?", "options": ["A B", "A,B", "A-B", "AB"], "answer": "A-B"},
     {"q": "input() аркылуу кирген маалымат демейки боюнча кайсы типте болот?", "options": ["str", "int", "float", "list"], "answer": "str"},
-    {"q": "len([1, 2, 3]) функциясы кандай маани берет?", "options": ["1", "2", "3", "0"], "answer": "3"},
+    {"q": "len() функциясы кандай маани берет?", "options": ["1", "2", "3", "0"], "answer": "3"},
     {"q": "Pythonдо 17 % 5 туюнтмасынын калдыгы канча?", "options": ["3", "2", "1", "5"], "answer": "2"},
     {"q": "Шарттуу операторду (эгерде) ачуучу ачкыч сөз кайсы?", "options": ["if", "else", "for", "while"], "answer": "if"},
     {"q": "Барабарлыкты текшерүүчү операторду көрсөтүңүз?", "options": ["=", "===", "is", "=="], "answer": "=="},
@@ -73,7 +73,7 @@ QUESTIONS = [
     {"q": "Коддогу бир саптуу комментарий кайсы символ менен башталат?", "options": ["//", "/*", "#", "--"], "answer": "#"},
     {"q": "for i in range(3): циклы канча жолу айланат?", "options": ["2 жолу", "3 жолу", "4 жолу", "Чексиз"], "answer": "3 жолу"},
     {"q": "range(3) функциясы кайсы сандарды берет?", "options": ["1, 2, 3", "0, 1, 2", "0, 1, 2, 3", "1, 2"], "answer": "0, 1, 2"},
-    {"q": "Төмөнкүлөрдүн кайсынысы сөздүк (dictionary) болуп саналат?", "options": ["{1, 2}", "[1, 2]", "(1, 2)", "{'a': 1}"], "answer": "{'a': 1}"},
+    {"q": "Төмөнкүлөрдүн кайсынысы сөздүк (dictionary) болуп саналат?", "options": ["{1, 2}", "", "(1, 2)", "{'a': 1}"], "answer": "{'a': 1}"},
     {"q": "Сөздүктөн ачкычтарды алуучу метод кайсы?", "options": ["keys()", "values()", "items()", "get()"], "answer": "keys()"},
     {"q": "Жеке функция түзүү үчүн кайсы ачкыч сөз колдонулат?", "options": ["function", "fun", "def", "define"], "answer": "def"},
     
@@ -82,13 +82,13 @@ QUESTIONS = [
     {"q": "Python тилинин автору ким?", "options": ["Гвидо ван Россум", "Джеймс Гослинг", "Деннис Ритчи", "Линус Торвальдс"], "answer": "Гвидо ван Россум"},
     {"q": "Тизмедеги элементти индекси менен өчүрүүчү оператор?", "options": ["remove", "del", "clear", "pop_index"], "answer": "del"},
     {"q": "Тизменин эң акыркы элементинин индекси канча?", "options": ["0", "1", "-1", "last"], "answer": "-1"},
-    {"q": "Шарттуу оператордогу 'же андай эмес болсо' сөзү кандай кыскартылат?", "options": ["elseif", "elif", "elsif", "else_if"], "answer": "elif"},
+    {"q": "Шарттуу оператордегу 'же андай эмес болсо' сөзү кандай кыскартылат?", "options": ["elseif", "elif", "elsif", "else_if"], "answer": "elif"},
     {"q": "while циклы качан ишин токтотот?", "options": ["True болгондо", "False болгондо", "Биринчи айланууда", "Эч качан"], "answer": "False болгондо"},
     {"q": "Циклди дароо токтотуп чыгуучу оператор кайсы?", "options": ["continue", "stop", "break", "exit"], "answer": "break"},
     {"q": "Циклдин кийинки айлануусуна дароо өткөрүүчү сөз?", "options": ["break", "continue", "pass", "next"], "answer": "continue"},
     {"q": "Эч кандай аракет аткарбаган бош оператор?", "options": ["None", "null", "pass", "void"], "answer": "pass"},
     
-    {"q": "Төмөнкүлөрдүн кайсынысы топтом (set) болуп саналат?", "options": ["{1, 2, 3}", "[1, 2, 3]", "(1, 2, 3)", "set(1)"], "answer": "{1, 2, 3}"},
+    {"q": "Төмөнкүлөрдүн кайсынысы топтом (set) болуп саналат?", "options": ["{1, 2, 3}", "", "(1, 2, 3)", "set(1)"], "answer": "{1, 2, 3}"},
     {"q": "Топтомдордо (set) кайталануучу бирдей элементтер болобу?", "options": ["Ооба", "Жок", "Кээде гана", "Атайын шарт менен"], "answer": "Жок"},
     {"q": "Pythonдо файлды ачуучу камтылган функция?", "options": ["read()", "file()", "open()", "load()"], "answer": "open()"},
     {"q": "Файлга маалымат жазуу үчүн кайсы режим (mode) тандалат?", "options": ["'r'", "'w'", "'x'", "'a'"], "answer": "'w'"},
@@ -128,7 +128,7 @@ if page == "Окуучулар үчүн (Тест)":
     if "user_fio" not in st.session_state:
         with st.form("reg_form"):
             st.subheader("📝 Тестке катталуу / Кирүү")
-            l_name = st.text_input("Фамилияңыз:").strip()
+            l_name = st.text_input("Fazмилияңыз:").strip()
             f_name = st.text_input("Атыңыз:").strip()
             m_name = st.text_input("Атасынын аты (болсо):").strip()
             student_class = st.text_input("Классыңыз (мисалы: 9-А, 11-Б):").strip()
@@ -137,3 +137,4 @@ if page == "Окуучулар үчүн (Тест)":
             if btn:
                 if l_name and f_name and student_class:
                     full_name = f"{l_name} {f_name} {m_name}".strip()
+                    st.session_state.user_fio = full_name
