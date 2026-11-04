@@ -48,7 +48,7 @@ def save_to_db(fio, clazz, time_str, score_str, percent, level, stage, answers_s
         df = pd.concat([df, new_row], ignore_index=True)
     df.to_csv(DB_FILE, index=False)
 
-# 50 суроодон турган база
+# 50 суроодон турган коопсуз база
 QUESTIONS = [
     {"q": "Төмөндөгүлөрдүн кайсынысы Pythonдо өзгөрмөнүн аты катары туура эмес?", "options": ["my_var", "_age", "userAge", "1st_place"], "answer": "1st_place"},
     {"q": "Pythonдо 5 / 2 туюнтмасы кандай маалымат тибин кайтарат?", "options": ["int", "float", "str", "bool"], "answer": "float"},
@@ -58,7 +58,7 @@ QUESTIONS = [
     {"q": "Pythonдо input() функциясы аркылуу киргизилген маалымат демейки боюнча кайсы типте сакталат?", "options": ["str", "int", "float", "list"], "answer": "str"},
     {"q": "len() функциясы кандай маанини кайтарат?", "options": ["3", "40", "4", "10"], "answer": "4"},
     {"q": "Pythonдо 17 % 5 туюнтмасынын натыйжасы эмнеге барабар?", "options": ["3", "2", "3.4", "5"], "answer": "2"},
-    {"q": "x = 10; if x > 10: print('A') else: print('B') кодунун жыйынтыгы эмне болот?", "options": ["A", "B", "AB", "Эч нерсе чыкпайт"], "answer": "B"},
+    {"q": "Pythonдо шарттуу операторду (эгерде) ачуу үчүн кайсы ачкыч сөз колдонулат?", "options": ["if", "else", "for", "while"], "answer": "if"},
     {"q": "Pythonдо эки маанинин барабарлыгын текшерүү үчүн кайсы оператор колдонулат?", "options": ["=", "===", "is equal", "=="], "answer": "=="},
     
     {"q": "Pythonдо логикалык 'ЖАНА' оператору кайсы сөз менен жазылат?", "options": ["&&", "and", "AND", "conj"], "answer": "and"},
@@ -117,4 +117,3 @@ page = st.sidebar.radio("Панелди тандаңыз:", ["Окуучулар
 
 # ----------------- ОКУУЧУНУН ПАНЕЛИ -----------------
 if page == "Окуучулар үчүн (Тест)":
-
