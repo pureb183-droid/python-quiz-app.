@@ -231,3 +231,22 @@ if submitted:
 
         else:
             st.warning("Көбүрөөк даярданыңыз!")
+# Платформанын автору
+st.divider()
+
+st.markdown("""
+<div style="
+    text-align: center;
+    padding: 30px;
+    margin-top: 40px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 15px;
+    color: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+">
+    <h3>🌷 Платформанын автору</h3>
+    <h2>Бейшеналиева Назира Асановна</h2>
+    <p>Python Тести жана Аналитика</p>
+    <p>© 2026 Бардык укуктар корголгон</p>
+</div>
+""", unsafe_allow_html=True)
