@@ -245,7 +245,7 @@ with st.expander("🔐 МУГАЛИМ ПАНЕЛИ"):
         key="teacher_password"
     )
 
-    if password == "nazira2026":
+    if password == "nazira202!":
 
         st.success("Мугалим панели ачылды!")
 
