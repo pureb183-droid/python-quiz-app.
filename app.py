@@ -146,3 +146,88 @@ st.subheader("Тестке кош келиңиз!")
 st.write("Бул платформа аркылуу Python билимиңизди текшере аласыз.")
 
 st.success("Сайт ийгиликтүү иштеп жатат!")
+# Окуучунун маалыматтары жана тест
+st.divider()
+st.header("📝 Python билимин текшерүү")
+
+with st.form("python_test"):
+
+    fio = st.text_input("Окуучунун аты-жөнү:")
+    clazz = st.text_input("Классы:")
+
+    st.subheader("50 суроолук тест")
+
+    user_answers = []
+
+    for i, question in enumerate(QUESTIONS):
+        st.markdown(f"**{i + 1}. {question['q']}**")
+
+        options = [x for x in question["options"] if x.strip()]
+
+        answer = st.radio(
+            f"Жоопту тандаңыз:",
+            options,
+            index=None,
+            key=f"question_{i}",
+            label_visibility="collapsed"
+        )
+
+        user_answers.append(answer)
+
+    submitted = st.form_submit_button("ТЕСТТИ ЖӨНӨТҮҮ")
+
+if submitted:
+
+    if not fio.strip() or not clazz.strip():
+        st.error("Аты-жөнүңүздү жана классыңызды жазыңыз!")
+
+    else:
+        score = 0
+
+        for i, question in enumerate(QUESTIONS):
+            if user_answers[i] == question["answer"]:
+                score += 1
+
+        total = len(QUESTIONS)
+        percent = round(score / total * 100, 2)
+
+        level = get_level(percent)
+
+        current_time = datetime.now().strftime(
+            "%d.%m.%Y %H:%M"
+        )
+
+        answers_text = str(user_answers)
+
+        save_to_db(
+            fio,
+            clazz,
+            current_time,
+            f"{score}/{total}",
+            percent,
+            level,
+            "1-этап",
+            answers_text
+        )
+
+        st.success("Тест ийгиликтүү аяктады!")
+
+        st.subheader("🏆 Сиздин жыйынтыгыңыз")
+
+        col1, col2, col3 = st.columns(3)
+
+        col1.metric("Туура жооп", f"{score}/{total}")
+        col2.metric("Пайыз", f"{percent}%")
+        col3.metric("Деңгээли", level)
+
+        st.progress(percent / 100)
+
+        if percent >= 85:
+            st.balloons()
+            st.success("Мыкты! Сиз Python тилин жакшы билесиз!")
+
+        elif percent >= 65:
+            st.info("Жакшы! Дагы да машыгыңыз!")
+
+        else:
+            st.warning("Көбүрөөк даярданыңыз!")
