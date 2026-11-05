@@ -231,6 +231,7 @@ if submitted:
 
         else:
             st.warning("Көбүрөөк даярданыңыз!")
+
 # Платформанын автору
 st.divider()
 
