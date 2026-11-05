@@ -141,7 +141,7 @@ def get_level(percentage):
     else:
         return "Канааттандырарлык (Beginner)"
 # Сайттын башкы бети
-st.title("🐍 Python Тести жана Аналитика")
+st.title("🐍 Python")
 
 st.subheader("Тестке кош келиңиз!")
 
