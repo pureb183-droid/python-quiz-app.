@@ -233,6 +233,174 @@ if submitted:
 
         else:
             st.warning("Көбүрөөк даярданыңыз!")
+# ==================================
+# МУГАЛИМ ПАНЕЛИ
+# ==================================
+
+with st.expander("🔐 МУГАЛИМ ПАНЕЛИ"):
+
+    password = st.text_input(
+        "Мугалимдин сырсөзү:",
+        type="password",
+        key="teacher_password"
+    )
+
+    if password == "nazira2026":
+
+        st.success("Мугалим панели ачылды!")
+
+        df = load_db()
+
+        if not df.empty:
+
+            st.subheader("📊 Окуучулардын жыйынтыгы")
+
+            classes = sorted(
+                df["Класс"].dropna().astype(str).unique()
+            )
+
+            selected_class = st.selectbox(
+                "Классты тандаңыз:",
+                ["Бардык класстар"] + classes
+            )
+
+            if selected_class == "Бардык класстар":
+                result = df.copy()
+            else:
+                result = df[
+                    df["Класс"].astype(str) == selected_class
+                ].copy()
+
+            result = result.sort_values(
+                by=["Класс", "ФИО"]
+            )
+
+            col1, col2, col3 = st.columns(3)
+
+            col1.metric("Окуучулар", len(result))
+
+            col2.metric(
+                "Орточо пайыз",
+                f"{result['Процент (%)'].mean():.1f}%"
+            )
+
+            col3.metric(
+                "Мыкты деңгээл",
+                len(result[
+                    result["Деңгээли"].str.contains(
+                        "Advanced", na=False
+                    )
+                ])
+            )
+
+            st.dataframe(
+                result,
+                use_container_width=True,
+                hide_index=True
+            )
+
+            # EXCEL ЖҮКТӨӨ
+
+            buffer = io.BytesIO()
+
+            with pd.ExcelWriter(
+                buffer,
+                engine="openpyxl"
+            ) as writer:
+
+                result.to_excel(
+                    writer,
+                    index=False,
+                    sheet_name="Жыйынтыктар"
+                )
+
+            st.download_button(
+                "📥 Excel жүктөп алуу",
+                data=buffer.getvalue(),
+                file_name="Okuu_jyyyntygy.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+
+            st.divider()
+
+            # СЕРТИФИКАТ
+
+            st.subheader("🏆 Сертификат берүү")
+
+            names = result["ФИО"].dropna().unique().tolist()
+
+            if names:
+
+                name = st.selectbox(
+                    "Окуучуну тандаңыз:",
+                    names
+                )
+
+                student = result[
+                    result["ФИО"] == name
+                ].iloc[0]
+
+                fio_cert = html.escape(str(student["ФИО"]))
+                class_cert = html.escape(str(student["Класс"]))
+                percent_cert = html.escape(str(student["Процент (%)"]))
+                level_cert = html.escape(str(student["Деңгээли"]))
+
+                cert = f"""
+                <html>
+                <head>
+                <meta charset="UTF-8">
+                <style>
+                body {{
+                    font-family: Arial;
+                    text-align: center;
+                    background: #f0f2f6;
+                    padding: 30px;
+                }}
+                .cert {{
+                    background: white;
+                    border: 10px double #667eea;
+                    padding: 45px;
+                    max-width: 800px;
+                    margin: auto;
+                }}
+                h1 {{ color: #667eea; }}
+                h2 {{ color: #333; }}
+                .score {{
+                    font-size: 40px;
+                    color: #764ba2;
+                    font-weight: bold;
+                }}
+                </style>
+                </head>
+                <body>
+                <div class="cert">
+                    <h1>🏆 СЕРТИФИКАТ</h1>
+                    <h2>PYTHON БИЛИМИН ТЕКШЕРҮҮ</h2>
+                    <p>Бул сертификат</p>
+                    <h2>{fio_cert}</h2>
+                    <p>{class_cert} классынын окуучусуна берилет.</p>
+                    <p>Тесттин жыйынтыгы:</p>
+                    <div class="score">{percent_cert}%</div>
+                    <p>Деңгээли: {level_cert}</p>
+                    <br><br>
+                    <p>Бейшеналиева Назира Асановна</p>
+                </div>
+                </body>
+                </html>
+                """
+
+                st.download_button(
+                    "🏆 Сертификатты жүктөп алуу",
+                    data=cert.encode("utf-8"),
+                    file_name="Sertifikat.html",
+                    mime="text/html"
+                )
+
+        else:
+            st.info("Азырынча окуучулар тест тапшыра элек.")
+
+    elif password:
+        st.error("Сырсөз туура эмес!")
 
 # Платформанын автору
 st.divider()
