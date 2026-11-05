@@ -132,5 +132,9 @@ QUESTIONS = [
 ]
 
 def get_level(percentage):
-    if percentage >= 85: return "Мыкты (Advanced)"
-    elif percentage >= 65: return "Жакшы (Intermediate)"
+    if percentage >= 85:
+        return "Мыкты (Advanced)"
+    elif percentage >= 65:
+        return "Жакшы (Intermediate)"
+    else:
+        return "Канааттандырарлык (Beginner)"
