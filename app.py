@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import os
+import io
+import html
 from datetime import datetime
 
 # Негизги жөндөөлөр
