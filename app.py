@@ -6,7 +6,7 @@ import html
 from datetime import datetime
 
 # Негизги жөндөөлөр
-st.set_page_config(page_title="Python Тести & Аналитика", layout="wide")
+st.set_page_config(page_title="Python тести & Аналитика", layout="wide")
 
 # Сайтты толугу менен 3D жана кооз түстөр менен жасалгалоо (CSS)
 st.markdown("""
@@ -20,7 +20,7 @@ st.markdown("""
         border-radius: 16px;
         padding: 25px;
         margin: 10px 0px;
-        box-shadow: 6px 6px 12px #c5c9d1, -6px -6px 12px #ffffff;
+        box-shadow: 6px 6px 8px #c5c9d1, -6px -6px 12px #ffffff;
         text-align: center;
         border: 1px solid rgba(255,255,255,0.2);
     }
@@ -415,9 +415,9 @@ st.markdown("""
     color: white;
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 ">
-    <h3>Автору</h3>
+    <h3>Автор:</h3>
     <h2>Бейшеналиева Назира Асановна</h2>
-    <p>Python Тести жана Аналитика</p>
+    <p>Python</p>
     <p>© 2026 Бардык укуктар корголгон</p>
 </div>
 """, unsafe_allow_html=True)
