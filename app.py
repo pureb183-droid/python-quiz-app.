@@ -138,3 +138,11 @@ def get_level(percentage):
         return "Жакшы (Intermediate)"
     else:
         return "Канааттандырарлык (Beginner)"
+# Сайттын башкы бети
+st.title("🐍 Python Тести жана Аналитика")
+
+st.subheader("Тестке кош келиңиз!")
+
+st.write("Бул платформа аркылуу Python билимиңизди текшере аласыз.")
+
+st.success("Сайт ийгиликтүү иштеп жатат!")
