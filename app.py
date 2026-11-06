@@ -3,15 +3,110 @@ import pandas as pd
 import os
 import io
 import html
+import base64
 from datetime import datetime
 
-# Негизги жөндөөлөр
+# 1. Эң биринчи кезекте st.set_page_config() турушу шарт!
 st.set_page_config(page_title="Python тести & Аналитика", layout="wide")
 
-# Сайтты толугу менен 3D жана кооз түстөр менен жасалгалоо (CSS)
+# 2. Андан кийин сессиялык абалдарды текшерүү
+if "authenticated_user" not in st.session_state:
+    st.session_state["authenticated_user"] = None
+if "user_role" not in st.session_state:
+    st.session_state["user_role"] = None
+if "current_page" not in st.session_state:
+    st.session_state["current_page"] = "login"
+
+# 3. Сайтты толугу менен 3D жана кооз түстөр менен жасалгалоо (CSS)
 st.markdown("""
 <style>
     /* Негизги фон */
+    .main { background-color: #f0f2f6; }
+    ... (мурунку CSS стилдериңиз) ...
+</style>
+""", unsafe_allow_html=True)
+# Барактар ортосунда өтүү үчүн Sidebar менюсу
+st.sidebar.title("📌 Меню")
+# ==========================================
+# КИРҮҮ ЖАНА КАТТАЛУУ БЕТИ
+# ==========================================
+if st.session_state["current_page"] == "login":
+    st.header("🔑 Окуучулардын порталы")
+    tab1, tab2 = st.tabs(["Кирүү", "Катталуу"])
+    
+    with tab1:
+        with st.form("login_form"):
+            login_user = st.text_input("Логин (Колдонуучу аты):")
+            login_pass = st.text_input("Сырсөз:", type="password")
+            btn_login = st.form_submit_button("Кабинетке кирүү")
+            if btn_login:
+                user_data = verify_user(login_user, login_pass)
+                if user_data:
+                    st.session_state["authenticated_user"] = user_data
+                    st.session_state["user_role"] = "student"
+                    st.session_state["current_page"] = "student_dashboard"
+                    st.success("Ийгиликтүү кирдиңиз!")
+                    st.rerun()
+                else:
+                    st.error("Логин же сырсөз туура эмес!")
+
+    with tab2:
+        with st.form("reg_form"):
+            reg_fio = st.text_input("Толук аты-жөнү (ФИО):")
+            reg_clazz = st.text_input("Классы (мисалы: 9-А):")
+            reg_user = st.text_input("Жаңы логин ойлоп табыңыз:")
+            reg_pass = st.text_input("Жаңы сырсөз түзүңүз:", type="password")
+            avatar_file = st.file_uploader("Аватарка үчүн сүрөт жүктөңүз (күндөлүк үчүн):", type=["png", "jpg", "jpeg"])
+            btn_reg = st.form_submit_button("Катталуу")
+            
+            if btn_reg:
+                avatar_b64 = ""
+                if avatar_file:
+                    avatar_b64 = base64.b64encode(avatar_file.read()).decode('utf-8')
+                if reg_fio and reg_clazz and reg_user and reg_pass:
+                    if register_user(reg_fio, reg_clazz, reg_user, reg_pass, avatar_b64):
+                        st.success("Катталуу ийгиликтүү өттү! Эми Кирүү өтмөгүнөн кириңиз.")
+                    else:
+                        st.error("Бул логин ээленген!")
+                else:
+                    st.warning("Бардык талааларды толтуруңуз!")
+
+# ==========================================
+# ОКУУЧУНУН ЖЕКЕ КАТАБИНЕТИ ЖАНА ЭЛЕКТРОНДУК КҮНДӨЛҮК СТИЛИ
+# ==========================================
+elif st.session_state["current_page"] == "student_dashboard" and st.session_state["authenticated_user"]:
+    user_info = st.session_state["authenticated_user"]
+    
+    # Күндөлүк карточкасынын дизайны
+    col_av, col_info = st.columns([1, 3])
+    with col_av:
+        if user_info.get("avatar_bytes"):
+            st.markdown(f'<img src="data:image/png;base64,{user_info["avatar_bytes"]}" style="width:130px; height:130px; border-radius:50%; object-fit:cover; border: 3px solid #667eea;">', unsafe_allow_html=True)
+        else:
+            st.markdown('<div style="width:120px; height:120px; border-radius:50%; background:#cbd5e0; display:flex; align-items:center; justify-content:center; font-size:40px;">👤</div>', unsafe_allow_html=True)
+    
+    with col_info:
+        st.markdown(f"### 📘 Электрондук Күндөлүк: **{user_info['fio']}**")
+        st.write(f"**Классы:** {user_info['clazz']}")
+        st.write(f"**Статусу:** Активдүү окуучу")
+
+    st.divider()
+    # Тестти ушул жерден андан ары мурунку код боюнча баштайсыз...
+if st.session_state["authenticated_user"] is None:
+    page_choice = st.sidebar.radio("Навигация", ["Кирүү / Катталуу", "Мугалим порталы"])
+    if page_choice == "Кирүү / Катталуу":
+        st.session_state["current_page"] = "login"
+    else:
+        st.session_state["current_page"] = "teacher_login"
+else:
+    st.sidebar.write(f"👤 **Колдонуучу:** {st.session_state['authenticated_user']['fio']}")
+    page_choice = st.sidebar.radio("Навигация", ["Жеке кабинет жана Тест", "Чыгуу"])
+    if page_choice == "Чыгуу":
+        st.session_state["authenticated_user"] = None
+        st.session_state["user_role"] = None
+        st.session_state["current_page"] = "login"
+        st.rerun()
+/* Негизги фон */
     .main { background-color: #f0f2f6; }
     
     /* 3D Көлөмдүү Карточкалар (Неоморфизм) */
@@ -39,25 +134,34 @@ st.markdown("""
         transform: translateY(-2px);
         box-shadow: 5px 5px 12px #9c9c9c, -5px -5px 12px #ffffff;
     }
-    
-    /* Сертификаттын дизайны */
-    .cert-box {
-        border: 12px double #4a5568; padding: 45px; text-align: center;
-        background: #ffffff; border-radius: 20px;
-        box-shadow: 10px 10px 25px rgba(0,0,0,0.1);
-        max-width: 750px; margin: 30px auto;
-    }
-    .stage-header {
-        background: linear-gradient(90deg, #ebf8ff 0%, #bee3f8 100%);
-        padding: 15px; border-radius: 10px;
-        color: #2b6cb0; font-weight: bold; margin-bottom: 25px;
-        border-left: 5px solid #3182ce;
-    }
-</style>
-""", unsafe_allow_html=True)
+    # Колдонуучулардын базасы
+USERS_DB = "users_database.csv"
+if not os.path.exists(USERS_DB):
+    pd.DataFrame(columns=["fio", "clazz", "username", "password", "avatar_bytes"]).to_csv(USERS_DB, index=False)
 
-# Базаны түзүү
-DB_FILE = "quiz_database.csv"
+def load_users():
+    if os.path.exists(USERS_DB):
+        try:
+            return pd.read_csv(USERS_DB)
+        except:
+            return pd.DataFrame(columns=["fio", "clazz", "username", "password", "avatar_bytes"])
+    return pd.DataFrame(columns=["fio", "clazz", "username", "password", "avatar_bytes"])
+
+def register_user(fio, clazz, username, password, avatar_bytes=""):
+    df = load_users()
+    if username in df["username"].values.astype(str):
+        return False
+    new_user = pd.DataFrame([{"fio": fio, "clazz": clazz, "username": username, "password": password, "avatar_bytes": avatar_bytes}])
+    df = pd.concat([df, new_user], ignore_index=True)
+    df.to_csv(USERS_DB, index=False)
+    return True
+
+def verify_user(username, password):
+    df = load_users()
+    match = df[(df["username"].astype(str) == str(username)) & (df["password"].astype(str) == str(password))]
+    if not match.empty:
+        return match.iloc[0].to_dict()
+    return None
 if not os.path.exists(DB_FILE):
     columns_list = ["ФИО", "Класс", "Убактысы", "Туура жооп", "Процент (%)", "Деңгээли", "Учурдагы_Этап", "Жооптор"]
     pd.DataFrame(columns=columns_list).to_csv(DB_FILE, index=False)
@@ -237,27 +341,22 @@ if submitted:
 # МУГАЛИМ ПАНЕЛИ
 # ==================================
 
-with st.expander("🔐 МУГАЛИМ ПАНЕЛИ"):
-
-    password = st.text_input(
-        "Мугалимдин сырсөзү:",
-        type="password",
-        key="teacher_password"
-    )
-
-    if password == "nazira202!":
-
-        st.success("Мугалим панели ачылды!")
-
+# ==========================================
+# 6-КАДАМ: МУГАЛИМДИН ӨЗҮНЧӨ ПОРТАЛЫ
+# (Эски expander блогунун ордуна толугу менен коюлат)
+# ==========================================
+if st.session_state["current_page"] == "teacher_login":
+    st.header("🔐 Мугалимдин жеке кабинети")
+    
+    if st.session_state.get("teacher_logged_in"):
+        st.success("Кош келиңиз, Назира Асановна!")
+        
         df = load_db()
 
         if not df.empty:
-
             st.subheader("📊 Окуучулардын жыйынтыгы")
 
-            classes = sorted(
-                df["Класс"].dropna().astype(str).unique()
-            )
+            classes = sorted(df["Класс"].dropna().astype(str).unique())
 
             selected_class = st.selectbox(
                 "Классты тандаңыз:",
@@ -267,52 +366,24 @@ with st.expander("🔐 МУГАЛИМ ПАНЕЛИ"):
             if selected_class == "Бардык класстар":
                 result = df.copy()
             else:
-                result = df[
-                    df["Класс"].astype(str) == selected_class
-                ].copy()
+                result = df[df["Класс"].astype(str) == selected_class].copy()
 
-            result = result.sort_values(
-                by=["Класс", "ФИО"]
-            )
+            result = result.sort_values(by=["Класс", "ФИО"])
 
             col1, col2, col3 = st.columns(3)
-
             col1.metric("Окуучулар", len(result))
-
-            col2.metric(
-                "Орточо пайыз",
-                f"{result['Процент (%)'].mean():.1f}%"
-            )
-
+            col2.metric("Орточо пайыз", f"{result['Процент (%)'].mean():.1f}%")
             col3.metric(
                 "Мыкты деңгээл",
-                len(result[
-                    result["Деңгээли"].str.contains(
-                        "Advanced", na=False
-                    )
-                ])
+                len(result[result["Деңгээли"].str.contains("Advanced", na=False)])
             )
 
-            st.dataframe(
-                result,
-                use_container_width=True,
-                hide_index=True
-            )
+            st.dataframe(result, use_container_width=True, hide_index=True)
 
             # EXCEL ЖҮКТӨӨ
-
             buffer = io.BytesIO()
-
-            with pd.ExcelWriter(
-                buffer,
-                engine="openpyxl"
-            ) as writer:
-
-                result.to_excel(
-                    writer,
-                    index=False,
-                    sheet_name="Жыйынтыктар"
-                )
+            with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+                result.to_excel(writer, index=False, sheet_name="Жыйынтыктар")
 
             st.download_button(
                 "📥 Excel жүктөп алуу",
@@ -323,22 +394,15 @@ with st.expander("🔐 МУГАЛИМ ПАНЕЛИ"):
 
             st.divider()
 
-            # СЕРТИФИКАТ
-
+            # СЕРТИФИКАТ (ЖАҢЫ ДИЗАЙН МЕНЕН)
             st.subheader("🏆 Сертификат берүү")
 
             names = result["ФИО"].dropna().unique().tolist()
 
             if names:
+                name = st.selectbox("Окуучуну тандаңыз:", names)
 
-                name = st.selectbox(
-                    "Окуучуну тандаңыз:",
-                    names
-                )
-
-                student = result[
-                    result["ФИО"] == name
-                ].iloc[0]
+                student = result[result["ФИО"] == name].iloc[0]
 
                 fio_cert = html.escape(str(student["ФИО"]))
                 class_cert = html.escape(str(student["Класс"]))
@@ -346,48 +410,119 @@ with st.expander("🔐 МУГАЛИМ ПАНЕЛИ"):
                 level_cert = html.escape(str(student["Деңгээли"]))
 
                 cert = f"""
-                <html>
-                <head>
-                <meta charset="UTF-8">
-                <style>
-                body {{
-                    font-family: Arial;
-                    text-align: center;
-                    background: #f0f2f6;
-                    padding: 30px;
-                }}
-                .cert {{
-                    background: white;
-                    border: 10px double #667eea;
-                    padding: 45px;
-                    max-width: 800px;
-                    margin: auto;
-                }}
-                h1 {{ color: #667eea; }}
-                h2 {{ color: #333; }}
-                .score {{
-                    font-size: 40px;
-                    color: #764ba2;
-                    font-weight: bold;
-                }}
-                </style>
-                </head>
-                <body>
-                <div class="cert">
-                    <h1>🏆 СЕРТИФИКАТ</h1>
-                    <h2>PYTHON БИЛИМИН ТЕКШЕРҮҮ</h2>
-                    <p>Бул сертификат</p>
-                    <h2>{fio_cert}</h2>
-                    <p>{class_cert} классынын окуучусуна берилет.</p>
-                    <p>Тесттин жыйынтыгы:</p>
-                    <div class="score">{percent_cert}%</div>
-                    <p>Деңгээли: {level_cert}</p>
-                    <br><br>
-                    <p>Бейшеналиева Назира Асановна</p>
-                </div>
-                </body>
-                </html>
-                """
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&display=swap');
+    body {{
+        font-family: 'Times New Roman', serif;
+        background: #f4f4f4;
+        padding: 20px;
+    }}
+    .cert-container {{
+        border: 15px solid #0088cc;
+        padding: 10px;
+        background: #fff;
+        max-width: 900px;
+        margin: auto;
+        box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }}
+    .cert-inner {{
+        border: 3px double #0088cc;
+        padding: 30px;
+        text-align: center;
+        position: relative;
+        background: radial-gradient(circle, #ffffff 60%, #e6f7ff 100%);
+    }}
+    .header-title {{
+        font-size: 16px;
+        font-weight: bold;
+        color: #1a365d;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }}
+    .sub-header {{
+        font-size: 14px;
+        color: #2b6cb0;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }}
+    .cert-main-title {{
+        font-size: 48px;
+        color: #0056b3;
+        font-weight: bold;
+        letter-spacing: 4px;
+        margin: 15px 0;
+    }}
+    .student-name {{
+        font-size: 32px;
+        color: #2c5282;
+        font-style: italic;
+        border-bottom: 2px solid #2c5282;
+        display: inline-block;
+        padding: 0 20px 5px 20px;
+        margin: 15px 0;
+    }}
+    .desc {{
+        font-size: 16px;
+        line-height: 1.6;
+        color: #2d3748;
+        max-width: 750px;
+        margin: 0 auto;
+    }}
+    .footer-table {{
+        width: 100%;
+        margin-top: 40px;
+        font-size: 14px;
+    }}
+</style>
+</head>
+<body>
+
+<div class="cert-container">
+    <div class="cert-inner">
+        <div class="header-title">КЫРГЫЗ РЕСПУБЛИКАСЫНЫН БИЛИМ БЕРҮҮ ЖАНА ИЛИМ МИНИСТРЛИГИ</div>
+        <div class="sub-header">PYTHON МЕКТЕБИ ЖАНА ПРОГРАММАЛОО ИНСТИТУТУ</div>
+        
+        <div class="cert-main-title">СЕРТИФИКАТ</div>
+        
+        <p style="font-size:18px;">Бул сертификат салтанаттуу түрдө берилет:</p>
+        <div class="student-name">{fio_cert}</div>
+        <p><b>{class_cert}</b> классынын окуучусуна</p>
+        
+        <div class="desc">
+            «Python программалоо тили боюнча билимди текшерүү жана практикалык көндүмдөр» курсун 
+            ийгиликтүү аяктагандыгы үчүн. <br>
+            Жыйынтык: <b>{percent_cert}%</b> | Деңгээли: <b>{level_cert}</b>
+        </div>
+
+        <table class="footer-table">
+            <tr>
+                <td style="text-align:left; width:35%;">
+                    <b>Башкы мугалим:</b><br>
+                    доцент А.Д. Токтомаметов<br><br>
+                    <i>Колу: ___________</i>
+                </td>
+                <td style="text-align:center; width:30%;">
+                    <div style="border:1px solid #ccc; padding:5px; display:inline-block;">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=Certificate-{fio_cert}" width="80" height="80">
+                    </div>
+                    <br><small>№ 24630</small>
+                </td>
+                <td style="text-align:right; width:35%;">
+                    <b>Текшерүүчү мугалим:</b><br>
+                    Бейшеналиева Назира Асановна<br><br>
+                    <i>Колу: ___________</i>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>
+"""
 
                 st.download_button(
                     "🏆 Сертификатты жүктөп алуу",
@@ -398,11 +533,20 @@ with st.expander("🔐 МУГАЛИМ ПАНЕЛИ"):
 
         else:
             st.info("Азырынча окуучулар тест тапшыра элек.")
+            
+        st.divider()
+        if st.button("🚪 Мугалим кабинетинен чыгуу"):
+            st.session_state["teacher_logged_in"] = False
+            st.rerun()
 
-    elif password:
-        st.error("Сырсөз туура эмес!")
-
-# Платформанын автору
+    else:
+        teacher_pass = st.text_input("Мугалимдин сырсөзүн киргизиңиз:", type="password")
+        if st.button("Кабинетке кирүү"):
+            if teacher_pass == "nazira202!":
+                st.session_state["teacher_logged_in"] = True
+                st.rerun()
+            else:
+                st.error("Сырсөз туура эмес!")
 st.divider()
 
 st.markdown("""
