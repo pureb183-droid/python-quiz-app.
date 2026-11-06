@@ -18,96 +18,13 @@ if "current_page" not in st.session_state:
     st.session_state["current_page"] = "login"
 
 # 3. Сайтты толугу менен 3D жана кооз түстөр менен жасалгалоо (CSS)
+# Сайтты толугу менен 3D жана кооз түстөр менен жасалгалоо (CSS)
 st.markdown("""
 <style>
     /* Негизги фон */
-    .main { background-color: #f0f2f6; }
-    ... (мурунку CSS стилдериңиз) ...
-</style>
-""", unsafe_allow_html=True)
-# Барактар ортосунда өтүү үчүн Sidebar менюсу
-st.sidebar.title("📌 Меню")
-# ==========================================
-# КИРҮҮ ЖАНА КАТТАЛУУ БЕТИ
-# ==========================================
-if st.session_state["current_page"] == "login":
-    st.header("🔑 Окуучулардын порталы")
-    tab1, tab2 = st.tabs(["Кирүү", "Катталуу"])
-    
-    with tab1:
-        with st.form("login_form"):
-            login_user = st.text_input("Логин (Колдонуучу аты):")
-            login_pass = st.text_input("Сырсөз:", type="password")
-            btn_login = st.form_submit_button("Кабинетке кирүү")
-            if btn_login:
-                user_data = verify_user(login_user, login_pass)
-                if user_data:
-                    st.session_state["authenticated_user"] = user_data
-                    st.session_state["user_role"] = "student"
-                    st.session_state["current_page"] = "student_dashboard"
-                    st.success("Ийгиликтүү кирдиңиз!")
-                    st.rerun()
-                else:
-                    st.error("Логин же сырсөз туура эмес!")
-
-    with tab2:
-        with st.form("reg_form"):
-            reg_fio = st.text_input("Толук аты-жөнү (ФИО):")
-            reg_clazz = st.text_input("Классы (мисалы: 9-А):")
-            reg_user = st.text_input("Жаңы логин ойлоп табыңыз:")
-            reg_pass = st.text_input("Жаңы сырсөз түзүңүз:", type="password")
-            avatar_file = st.file_uploader("Аватарка үчүн сүрөт жүктөңүз (күндөлүк үчүн):", type=["png", "jpg", "jpeg"])
-            btn_reg = st.form_submit_button("Катталуу")
-            
-            if btn_reg:
-                avatar_b64 = ""
-                if avatar_file:
-                    avatar_b64 = base64.b64encode(avatar_file.read()).decode('utf-8')
-                if reg_fio and reg_clazz and reg_user and reg_pass:
-                    if register_user(reg_fio, reg_clazz, reg_user, reg_pass, avatar_b64):
-                        st.success("Катталуу ийгиликтүү өттү! Эми Кирүү өтмөгүнөн кириңиз.")
-                    else:
-                        st.error("Бул логин ээленген!")
-                else:
-                    st.warning("Бардык талааларды толтуруңуз!")
-
-# ==========================================
-# ОКУУЧУНУН ЖЕКЕ КАТАБИНЕТИ ЖАНА ЭЛЕКТРОНДУК КҮНДӨЛҮК СТИЛИ
-# ==========================================
-elif st.session_state["current_page"] == "student_dashboard" and st.session_state["authenticated_user"]:
-    user_info = st.session_state["authenticated_user"]
-    
-    # Күндөлүк карточкасынын дизайны
-    col_av, col_info = st.columns([1, 3])
-    with col_av:
-        if user_info.get("avatar_bytes"):
-            st.markdown(f'<img src="data:image/png;base64,{user_info["avatar_bytes"]}" style="width:130px; height:130px; border-radius:50%; object-fit:cover; border: 3px solid #667eea;">', unsafe_allow_html=True)
-        else:
-            st.markdown('<div style="width:120px; height:120px; border-radius:50%; background:#cbd5e0; display:flex; align-items:center; justify-content:center; font-size:40px;">👤</div>', unsafe_allow_html=True)
-    
-    with col_info:
-        st.markdown(f"### 📘 Электрондук Күндөлүк: **{user_info['fio']}**")
-        st.write(f"**Классы:** {user_info['clazz']}")
-        st.write(f"**Статусу:** Активдүү окуучу")
-
-    st.divider()
-    # Тестти ушул жерден андан ары мурунку код боюнча баштайсыз...
-if st.session_state["authenticated_user"] is None:
-    page_choice = st.sidebar.radio("Навигация", ["Кирүү / Катталуу", "Мугалим порталы"])
-    if page_choice == "Кирүү / Катталуу":
-        st.session_state["current_page"] = "login"
-    else:
-        st.session_state["current_page"] = "teacher_login"
-else:
-    st.sidebar.write(f"👤 **Колдонуучу:** {st.session_state['authenticated_user']['fio']}")
-    page_choice = st.sidebar.radio("Навигация", ["Жеке кабинет жана Тест", "Чыгуу"])
-    if page_choice == "Чыгуу":
-        st.session_state["authenticated_user"] = None
-        st.session_state["user_role"] = None
-        st.session_state["current_page"] = "login"
-        st.rerun()
-/* Негизги фон */
-    .main { background-color: #f0f2f6; }
+    .main { 
+        background-color: #f0f2f6; 
+    }
     
     /* 3D Көлөмдүү Карточкалар (Неоморфизм) */
     .card-3d {
@@ -119,6 +36,56 @@ else:
         text-align: center;
         border: 1px solid rgba(255,255,255,0.2);
     }
+    .card-title { 
+        color: #5a67d8; 
+        font-size: 16px; 
+        font-weight: bold; 
+        margin-bottom: 5px; 
+    }
+    .card-value { 
+        color: #2d3748; 
+        font-size: 32px; 
+        font-weight: 900; 
+    }
+    
+    /* Кооз Кнопкалар */
+    .stButton>button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white; 
+        border-radius: 12px; 
+        padding: 12px 28px;
+        font-weight: bold; 
+        border: none;
+        box-shadow: 3px 3px 8px #b8b8b8, -3px -3px 8px #ffffff;
+        transition: all 0.2s ease-in-out;
+    }
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 5px 5px 12px #9c9c9c, -5px -5px 12px #ffffff;
+    }
+    
+    /* Сертификаттын дизайны */
+    .cert-box {
+        border: 12px double #4a5568; 
+        padding: 45px; 
+        text-align: center;
+        background: #ffffff; 
+        border-radius: 20px;
+        box-shadow: 10px 10px 25px rgba(0,0,0,0.1);
+        max-width: 750px; 
+        margin: 30px auto;
+    }
+    .stage-header {
+        background: linear-gradient(90deg, #ebf8ff 0%, #bee3f8 100%);
+        padding: 15px; 
+        border-radius: 10px;
+        color: #2b6cb0; 
+        font-weight: bold; 
+        margin-bottom: 25px;
+        border-left: 5px solid #3182ce;
+    }
+</style>
+""", unsafe_allow_html=True)
     .card-title { color: #5a67d8; font-size: 16px; font-weight: bold; margin-bottom: 5px; }
     .card-value { color: #2d3748; font-size: 32px; font-weight: 900; }
     
