@@ -460,7 +460,7 @@ elif st.session_state["current_page"] == "teacher_login":
 <div class="cert-container">
     <div class="cert-inner">
         <div class="header-title">КЫРГЫЗ РЕСПУБЛИКАСЫНЫН БИЛИМ БЕРҮҮ ЖАНА ИЛИМ МИНИСТРЛИГИ</div>
-        <div class="sub-header">PYTHON МЕКТЕБИ ЖАНА ПРОГРАММАЛОО ИНСТИТУТУ</div>
+        <div class="sub-header">КЕҢЕШБЕК МЫРЗАБЕКОВ АТЫНДАГЫ ЖАЛПЫ БИЛИМ БЕРҮҮ МЕКТЕБИ</div>
         
         <div class="cert-main-title">СЕРТИФИКАТ</div>
         
