@@ -263,7 +263,7 @@ elif st.session_state["current_page"] == "student_dashboard" and st.session_stat
             st.markdown('<div style="width:120px; height:120px; border-radius:50%; background:#cbd5e0; display:flex; align-items:center; justify-content:center; font-size:40px;">👤</div>', unsafe_allow_html=True)
     
     with col_info:
-        st.markdown(f"### 📘 Электрондук Күндөлүк: **{user_info['fio']}**")
+        st.markdown(f"### 📘 Кеңешбек Мырзабеков атындагы ЖББМ **{user_info['fio']}**")
         st.write(f"**Классы:** {user_info['clazz']}")
         st.write(f"**Статусу:** Активдүү окуучу")
 
@@ -478,7 +478,7 @@ elif st.session_state["current_page"] == "teacher_login":
             <tr>
                 <td style="text-align:left; width:35%;">
                     <b>Башкы мугалим:</b><br>
-                    доцент А.Д. Токтомаметов<br><br>
+                    директор: Арыстанбекова М. А.<br><br>
                     <i>Колу: ___________</i>
                 </td>
                 <td style="text-align:center; width:30%;">
