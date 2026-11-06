@@ -477,8 +477,8 @@ elif st.session_state["current_page"] == "teacher_login":
         <table class="footer-table">
             <tr>
                 <td style="text-align:left; width:35%;">
-                    <b>Башкы мугалим:</b><br>
-                    директор: Арыстанбекова М. А.<br><br>
+                    <b>Директор:</b><br>
+                    Арыстанбекова М. А.<br><br>
                     <i>Колу: ___________</i>
                 </td>
                 <td style="text-align:center; width:30%;">
