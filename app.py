@@ -6,10 +6,10 @@ import html
 import base64
 from datetime import datetime
 
-# 1. Эң биринчи кезекте st.set_page_config() турушу шарт!
+# 1. Веб-сайттын негизги жөндөөлөрү
 st.set_page_config(page_title="Python тести & Аналитика", layout="wide")
 
-# 2. Андан кийин сессиялык абалдарды текшерүү
+# 2. Сессиялык абалдарды аныктоо
 if "authenticated_user" not in st.session_state:
     st.session_state["authenticated_user"] = None
 if "user_role" not in st.session_state:
@@ -17,16 +17,12 @@ if "user_role" not in st.session_state:
 if "current_page" not in st.session_state:
     st.session_state["current_page"] = "login"
 
-# 3. Сайтты толугу менен 3D жана кооз түстөр менен жасалгалоо (CSS)
-# Сайтты толугу менен 3D жана кооз түстөр менен жасалгалоо (CSS)
+# 3. Сайттын CSS стилдери
 st.markdown("""
 <style>
-    /* Негизги фон */
     .main { 
         background-color: #f0f2f6; 
     }
-    
-    /* 3D Көлөмдүү Карточкалар (Неоморфизм) */
     .card-3d {
         background: #ffffff;
         border-radius: 16px;
@@ -47,8 +43,6 @@ st.markdown("""
         font-size: 32px; 
         font-weight: 900; 
     }
-    
-    /* Кооз Кнопкалар */
     .stButton>button {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white; 
@@ -63,8 +57,6 @@ st.markdown("""
         transform: translateY(-2px);
         box-shadow: 5px 5px 12px #9c9c9c, -5px -5px 12px #ffffff;
     }
-    
-    /* Сертификаттын дизайны */
     .cert-box {
         border: 12px double #4a5568; 
         padding: 45px; 
@@ -86,25 +78,16 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-    .card-title { color: #5a67d8; font-size: 16px; font-weight: bold; margin-bottom: 5px; }
-    .card-value { color: #2d3748; font-size: 32px; font-weight: 900; }
-    
-    /* Кооз Кнопкалар */
-    .stButton>button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white; border-radius: 12px; padding: 12px 28px;
-        font-weight: bold; border: none;
-        box-shadow: 3px 3px 8px #b8b8b8, -3px -3px 8px #ffffff;
-        transition: all 0.2s ease-in-out;
-    }
-    .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 5px 5px 12px #9c9c9c, -5px -5px 12px #ffffff;
-    }
-    # Колдонуучулардын базасы
+
+# 4. Базаларды түзүү жана жүктөө
 USERS_DB = "users_database.csv"
+DB_FILE = "quiz_database.csv"
+
 if not os.path.exists(USERS_DB):
     pd.DataFrame(columns=["fio", "clazz", "username", "password", "avatar_bytes"]).to_csv(USERS_DB, index=False)
+
+if not os.path.exists(DB_FILE):
+    pd.DataFrame(columns=["ФИО", "Класс", "Убактысы", "Туура жооп", "Процент (%)", "Деңгээли", "Учурдагы_Этап", "Жооптор"]).to_csv(DB_FILE, index=False)
 
 def load_users():
     if os.path.exists(USERS_DB):
@@ -129,9 +112,6 @@ def verify_user(username, password):
     if not match.empty:
         return match.iloc[0].to_dict()
     return None
-if not os.path.exists(DB_FILE):
-    columns_list = ["ФИО", "Класс", "Убактысы", "Туура жооп", "Процент (%)", "Деңгээли", "Учурдагы_Этап", "Жооптор"]
-    pd.DataFrame(columns=columns_list).to_csv(DB_FILE, index=False)
 
 def load_db():
     if os.path.exists(DB_FILE):
@@ -150,7 +130,7 @@ def save_to_db(fio, clazz, time_str, score_str, percent, level, stage, answers_s
         df = pd.concat([df, new_row], ignore_index=True)
     df.to_csv(DB_FILE, index=False)
 
-# 50 суроонун базасы
+# 5. Тест суроолору
 QUESTIONS = [
     {"q": "Pythonдо кайсы өзгөрмөнүн аты ката жазылган?", "options": ["my_var", "_age", "userAge", "1st_place"], "answer": "1st_place"},
     {"q": "Pythonдо 5 / 2 туюнтмасы кандай типти кайтарат?", "options": ["int", "float", "str", "bool"], "answer": "float"},
@@ -211,70 +191,118 @@ def get_level(percentage):
         return "Жакшы (Intermediate)"
     else:
         return "Канааттандырарлык (Beginner)"
-# Сайттын башкы бети
-st.title("🐍 Python")
 
-st.subheader("Тестке кош келиңиз!")
+# 6. Sidebar Навигациясы
+st.sidebar.title("📌 Меню")
 
-st.write("Бул платформа аркылуу Python билимиңизди текшере аласыз.")
-
-st.success("Сайт ийгиликтүү иштеп жатат!")
-# Окуучунун маалыматтары жана тест
-st.divider()
-st.header("📝 Python билимин текшерүү")
-
-with st.form("python_test"):
-
-    fio = st.text_input("Окуучунун аты-жөнү:")
-    clazz = st.text_input("Классы:")
-
-    st.subheader("50 суроолук тест")
-
-    user_answers = []
-
-    for i, question in enumerate(QUESTIONS):
-        st.markdown(f"**{i + 1}. {question['q']}**")
-
-        options = [x for x in question["options"] if x.strip()]
-
-        answer = st.radio(
-            f"Жоопту тандаңыз:",
-            options,
-            index=None,
-            key=f"question_{i}",
-            label_visibility="collapsed"
-        )
-
-        user_answers.append(answer)
-
-    submitted = st.form_submit_button("ТЕСТТИ ЖӨНӨТҮҮ")
-
-if submitted:
-
-    if not fio.strip() or not clazz.strip():
-        st.error("Аты-жөнүңүздү жана классыңызды жазыңыз!")
-
+if st.session_state["authenticated_user"] is None:
+    page_choice = st.sidebar.radio("Навигация", ["Кирүү / Катталуу", "Мугалим порталы"])
+    if page_choice == "Кирүү / Катталуу":
+        st.session_state["current_page"] = "login"
     else:
-        score = 0
+        st.session_state["current_page"] = "teacher_login"
+else:
+    st.sidebar.write(f"👤 **Колдонуучу:** {st.session_state['authenticated_user']['fio']}")
+    page_choice = st.sidebar.radio("Навигация", ["Жеке кабинет жана Тест", "Чыгуу"])
+    if page_choice == "Чыгуу":
+        st.session_state["authenticated_user"] = None
+        st.session_state["user_role"] = None
+        st.session_state["current_page"] = "login"
+        st.rerun()
 
+# 7. Барактарды көрсөтүү логикасы
+if st.session_state["current_page"] == "login":
+    st.header("🔑 Окуучулардын порталы")
+    tab1, tab2 = st.tabs(["Кирүү", "Катталуу"])
+    
+    with tab1:
+        with st.form("login_form"):
+            login_user = st.text_input("Логин (Колдонуучу аты):")
+            login_pass = st.text_input("Сырсөз:", type="password")
+            btn_login = st.form_submit_button("Кабинетке кирүү")
+            if btn_login:
+                user_data = verify_user(login_user, login_pass)
+                if user_data:
+                    st.session_state["authenticated_user"] = user_data
+                    st.session_state["user_role"] = "student"
+                    st.session_state["current_page"] = "student_dashboard"
+                    st.success("Ийгиликтүү кирдиңиз!")
+                    st.rerun()
+                else:
+                    st.error("Логин же сырсөз туура эмес!")
+
+    with tab2:
+        with st.form("reg_form"):
+            reg_fio = st.text_input("Толук аты-жөнү (ФИО):")
+            reg_clazz = st.text_input("Классы (мисалы: 9-А):")
+            reg_user = st.text_input("Жаңы логин ойлоп табыңыз:")
+            reg_pass = st.text_input("Жаңы сырсөз түзүңүз:", type="password")
+            avatar_file = st.file_uploader("Аватарка үчүн сүрөт жүктөңүз:", type=["png", "jpg", "jpeg"])
+            btn_reg = st.form_submit_button("Катталуу")
+            
+            if btn_reg:
+                avatar_b64 = ""
+                if avatar_file:
+                    avatar_b64 = base64.b64encode(avatar_file.read()).decode('utf-8')
+                if reg_fio and reg_clazz and reg_user and reg_pass:
+                    if register_user(reg_fio, reg_clazz, reg_user, reg_pass, avatar_b64):
+                        st.success("Катталуу ийгиликтүү өттү! Эми Кирүү өтмөгүнөн кириңиз.")
+                    else:
+                        st.error("Бул логин ээленген!")
+                else:
+                    st.warning("Бардык талааларды толтуруңуз!")
+
+elif st.session_state["current_page"] == "student_dashboard" and st.session_state["authenticated_user"]:
+    user_info = st.session_state["authenticated_user"]
+    
+    col_av, col_info = st.columns([1, 3])
+    with col_av:
+        if user_info.get("avatar_bytes") and isinstance(user_info["avatar_bytes"], str):
+            st.markdown(f'<img src="data:image/png;base64,{user_info["avatar_bytes"]}" style="width:130px; height:130px; border-radius:50%; object-fit:cover; border: 3px solid #667eea;">', unsafe_allow_html=True)
+        else:
+            st.markdown('<div style="width:120px; height:120px; border-radius:50%; background:#cbd5e0; display:flex; align-items:center; justify-content:center; font-size:40px;">👤</div>', unsafe_allow_html=True)
+    
+    with col_info:
+        st.markdown(f"### 📘 Электрондук Күндөлүк: **{user_info['fio']}**")
+        st.write(f"**Классы:** {user_info['clazz']}")
+        st.write(f"**Статусу:** Активдүү окуучу")
+
+    st.divider()
+    st.header("📝 Python билимин текшерүү")
+
+    with st.form("python_test"):
+        st.subheader("50 суроолук тест")
+        user_answers = []
+
+        for i, question in enumerate(QUESTIONS):
+            st.markdown(f"**{i + 1}. {question['q']}**")
+            options = [x for x in question["options"] if str(x).strip()]
+            answer = st.radio(
+                f"Жоопту тандаңыз:",
+                options,
+                index=None,
+                key=f"question_{i}",
+                label_visibility="collapsed"
+            )
+            user_answers.append(answer)
+
+        submitted = st.form_submit_button("ТЕСТТИ ЖӨНӨТҮҮ")
+
+    if submitted:
+        score = 0
         for i, question in enumerate(QUESTIONS):
             if user_answers[i] == question["answer"]:
                 score += 1
 
         total = len(QUESTIONS)
         percent = round(score / total * 100, 2)
-
         level = get_level(percent)
-
-        current_time = datetime.now().strftime(
-            "%d.%m.%Y %H:%M"
-        )
-
+        current_time = datetime.now().strftime("%d.%m.%Y %H:%M")
         answers_text = str(user_answers)
 
         save_to_db(
-            fio,
-            clazz,
+            user_info["fio"],
+            user_info["clazz"],
             current_time,
             f"{score}/{total}",
             percent,
@@ -284,11 +312,9 @@ if submitted:
         )
 
         st.success("Тест ийгиликтүү аяктады!")
-
         st.subheader("🏆 Сиздин жыйынтыгыңыз")
 
         col1, col2, col3 = st.columns(3)
-
         col1.metric("Туура жооп", f"{score}/{total}")
         col2.metric("Пайыз", f"{percent}%")
         col3.metric("Деңгээли", level)
@@ -298,21 +324,12 @@ if submitted:
         if percent >= 85:
             st.balloons()
             st.success("Мыкты! Сиз Python тилин жакшы билесиз!")
-
         elif percent >= 65:
             st.info("Жакшы! Дагы да машыгыңыз!")
-
         else:
             st.warning("Көбүрөөк даярданыңыз!")
-# ==================================
-# МУГАЛИМ ПАНЕЛИ
-# ==================================
 
-# ==========================================
-# 6-КАДАМ: МУГАЛИМДИН ӨЗҮНЧӨ ПОРТАЛЫ
-# (Эски expander блогунун ордуна толугу менен коюлат)
-# ==========================================
-if st.session_state["current_page"] == "teacher_login":
+elif st.session_state["current_page"] == "teacher_login":
     st.header("🔐 Мугалимдин жеке кабинети")
     
     if st.session_state.get("teacher_logged_in"):
@@ -324,11 +341,7 @@ if st.session_state["current_page"] == "teacher_login":
             st.subheader("📊 Окуучулардын жыйынтыгы")
 
             classes = sorted(df["Класс"].dropna().astype(str).unique())
-
-            selected_class = st.selectbox(
-                "Классты тандаңыз:",
-                ["Бардык класстар"] + classes
-            )
+            selected_class = st.selectbox("Классты тандаңыз:", ["Бардык класстар"] + classes)
 
             if selected_class == "Бардык класстар":
                 result = df.copy()
@@ -347,7 +360,6 @@ if st.session_state["current_page"] == "teacher_login":
 
             st.dataframe(result, use_container_width=True, hide_index=True)
 
-            # EXCEL ЖҮКТӨӨ
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
                 result.to_excel(writer, index=False, sheet_name="Жыйынтыктар")
@@ -361,14 +373,12 @@ if st.session_state["current_page"] == "teacher_login":
 
             st.divider()
 
-            # СЕРТИФИКАТ (ЖАҢЫ ДИЗАЙН МЕНЕН)
             st.subheader("🏆 Сертификат берүү")
 
             names = result["ФИО"].dropna().unique().tolist()
 
             if names:
                 name = st.selectbox("Окуучуну тандаңыз:", names)
-
                 student = result[result["ФИО"] == name].iloc[0]
 
                 fio_cert = html.escape(str(student["ФИО"]))
@@ -514,8 +524,9 @@ if st.session_state["current_page"] == "teacher_login":
                 st.rerun()
             else:
                 st.error("Сырсөз туура эмес!")
-st.divider()
 
+# 8. Автордук футер
+st.divider()
 st.markdown("""
 <div style="
     text-align: center;
