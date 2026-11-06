@@ -386,7 +386,7 @@ elif st.session_state["current_page"] == "teacher_login":
                 percent_cert = html.escape(str(student["Процент (%)"]))
                 level_cert = html.escape(str(student["Деңгээли"]))
 
-                cert = f"""
+cert = f"""
 <html>
 <head>
 <meta charset="UTF-8">
@@ -501,45 +501,10 @@ elif st.session_state["current_page"] == "teacher_login":
 </html>
 """
 
-                st.download_button(
-                    "🏆 Сертификатты жүктөп алуу",
-                    data=cert.encode("utf-8"),
-                    file_name="Sertifikat.html",
-                    mime="text/html"
-                )
-
-        else:
-            st.info("Азырынча окуучулар тест тапшыра элек.")
-            
-        st.divider()
-        if st.button("🚪 Мугалим кабинетинен чыгуу"):
-            st.session_state["teacher_logged_in"] = False
-            st.rerun()
-
-    else:
-        teacher_pass = st.text_input("Мугалимдин сырсөзүн киргизиңиз:", type="password")
-        if st.button("Кабинетке кирүү"):
-            if teacher_pass == "nazira202!":
-                st.session_state["teacher_logged_in"] = True
-                st.rerun()
-            else:
-                st.error("Сырсөз туура эмес!")
-
-# 8. Автордук футер
-st.divider()
-st.markdown("""
-<div style="
-    text-align: center;
-    padding: 30px;
-    margin-top: 40px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 10px;
-    color: white;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-">
-    <h3>Автор:</h3>
-    <h4>Бейшеналиева Назира Асановна</h4>
-    <p>Python</p>
-    <p>© 2026 Бардык укуктар корголгон</p>
-</div>
-""", unsafe_allow_html=True)
+# Жүктөө баскычы туура форматта кошулат:
+st.download_button(
+    "🏆 Сертификатты жүктөп алуу",
+    data=cert.encode("utf-8"),
+    file_name="Sertifikat.html",
+    mime="text/html"
+)
