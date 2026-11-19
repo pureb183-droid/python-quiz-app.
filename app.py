@@ -79,11 +79,11 @@ def load_users():
 
 def register_user(fio, clazz, username, password, avatar_bytes=""):
     df = load_users()
-    if str(username) in df["username"].astype(str).values:
+    if str(username).strip() in df["username"].astype(str).str.strip().values:
         return False
     new_user = pd.DataFrame([{
-        "fio": fio, "clazz": clazz, "username": username, 
-        "password": password, "avatar_bytes": avatar_bytes
+        "fio": fio.strip(), "clazz": clazz, "username": username.strip(),
+        "password": password.strip(), "avatar_bytes": avatar_bytes
     }])
     df = pd.concat([df, new_user], ignore_index=True)
     df.to_csv(USERS_DB, index=False)
@@ -91,9 +91,12 @@ def register_user(fio, clazz, username, password, avatar_bytes=""):
 
 def verify_user(username, password):
     df = load_users()
-    match = df[(df["username"].astype(str) == str(username)) & (df["password"].astype(str) == str(password))]
+    u = str(username).strip()
+    p = str(password).strip()
+    match = df[(df["username"].astype(str).str.strip() == u) & (df["password"].astype(str).str.strip() == p)]
     if not match.empty:
-        return match.iloc[0].to_dict()
+        records = match.to_dict(orient="records")
+        return records[0]
     return None
 
 def load_db():
@@ -110,7 +113,7 @@ def save_to_db(fio, username, clazz, time_str, score_str, percent, level):
         ]
     else:
         new_row = pd.DataFrame([{
-            "ФИО": fio, "Username": username, "Класс": clazz, "Убактысы": time_str, 
+            "ФИО": fio, "Username": username, "Класс": clazz, "Убактысы": time_str,
             "Туура жооп": score_str, "Процент (%)": percent, "Деңгээли": level
         }])
         df = pd.concat([df, new_row], ignore_index=True)
@@ -124,11 +127,11 @@ QUESTIONS = [
     {"q": "Тизменин аягына элемент кошуучу метод кайсы?", "options": ["add()", "append()", "push()", "insert()"], "answer": "append()"},
     {"q": "print('A', 'B', sep='-') эмнени чыгарат?", "options": ["A B", "A,B", "A-B", "AB"], "answer": "A-B"},
     {"q": "input() аркылуу кирген маалымат демейки боюнча кайсы типте болот?", "options": ["str", "int", "float", "list"], "answer": "str"},
-    {"q": "len([1, 2, 3]) функциясы кандай маани берет?", "options": ["1", "2", "3", "0"], "answer": "3"},
+    {"q": "len('ABC') функциясы кандай маани берет?", "options": ["1", "2", "3", "0"], "answer": "3"},
     {"q": "Pythonдо 17 % 5 туюнтмасынын калдыгы канча?", "options": ["3", "2", "1", "5"], "answer": "2"},
     {"q": "Шарттуу операторду (эгерде) ачуучу ачкыч сөз кайсы?", "options": ["if", "else", "for", "while"], "answer": "if"},
     {"q": "Барабарлыкты текшерүүчү операторду көрсөтүңүз?", "options": ["=", "===", "is", "=="], "answer": "=="},
-    
+
     {"q": "Pythonдо логикалык 'ЖАНА' оператору кайсы?", "options": ["&&", "and", "AND", "not"], "answer": "and"},
     {"q": "Pythonдо логикалык 'ЖЕ' оператору кайсы сөз?", "options": ["||", "or", "OR", "xor"], "answer": "or"},
     {"q": "Кайсы маалымат тиби өзгөрүлбөйт (immutable)?", "options": ["list", "dict", "set", "tuple"], "answer": "tuple"},
@@ -136,10 +139,10 @@ QUESTIONS = [
     {"q": "Коддогу бир саптуу комментарий кайсы символ менен башталат?", "options": ["//", "/*", "#", "--"], "answer": "#"},
     {"q": "for i in range(3): циклы канча жолу айланат?", "options": ["2 жолу", "3 жолу", "4 жолу", "Чексиз"], "answer": "3 жолу"},
     {"q": "range(3) функциясы кайсы сандарды берет?", "options": ["1, 2, 3", "0, 1, 2", "0, 1, 2, 3", "1, 2"], "answer": "0, 1, 2"},
-    {"q": "Төмөнкүлөрдүн кайсынысы сөздүк (dictionary) болуп саналат?", "options": ["{1, 2}", "[1, 2]", "(1, 2)", "{'a': 1}"], "answer": "{'a': 1}"},
+    {"q": "Төмөнкүлөрдүн кайсынысы сөздүк (dictionary) болуп саналат?", "options": ["{1, 2}", "list(1, 2)", "(1, 2)", "{'a': 1}"], "answer": "{'a': 1}"},
     {"q": "Сөздүктөн ачкычтарды алуучу метод кайсы?", "options": ["keys()", "values()", "items()", "get()"], "answer": "keys()"},
     {"q": "Жеке функция түзүү үчүн кайсы ачкыч сөз колдонулат?", "options": ["function", "fun", "def", "define"], "answer": "def"},
-    
+
     {"q": "Функциядан маани кайтаруучу ачкыч сөз?", "options": ["give", "return", "back", "exit"], "answer": "return"},
     {"q": "Python тили биринчи жолу кайсы жылы чыккан?", "options": ["1991", "2000", "1985", "1995"], "answer": "1991"},
     {"q": "Python тилинин автору ким?", "options": ["Гвидо ван Россум", "Джеймс Гослинг", "Деннис Ритчи", "Линус Торвальдс"], "answer": "Гвидо ван Россум"},
@@ -153,14 +156,14 @@ QUESTIONS = [
 ]
 
 # 6. КИРҮҮ ЖАНА КАТТАЛУУ БЕТИ
-if st.session_state["authenticated_user"] is None:
+if st.session_state["authenticated_user"] is None or st.session_state["user_role"] is None:
     st.title("🐍 Python Билимди Текшерүү Платформасы")
     tab1, tab2, tab3 = st.tabs(["🔑 Окуучу кирүү", "📝 Катталуу", "👨‍🏫 Мугалим панели"])
-    
+
     with tab1:
         u_name = st.text_input("Логин", key="login_u")
         u_pass = st.text_input("Сыр сөз", type="password", key="login_p")
-        if st.button("Кирүү"):
+        if st.button("Кирүү", key="btn_student_login"):
             user = verify_user(u_name, u_pass)
             if user:
                 st.session_state["authenticated_user"] = user
@@ -170,17 +173,14 @@ if st.session_state["authenticated_user"] is None:
                 st.rerun()
             else:
                 st.error("Логин же сыр сөз туура эмес! Алгач 'Катталуу' бөлүмүнөн катталыңыз.")
-                
+
     with tab2:
-        r_fio = st.text_input("Аты-жөнүңүз (ФИО)")
-        r_clazz = st.selectbox("Классыңыз", ["7-класс", "8-класс", "9-класс", "10-класс", "11-класс", "Студент"])
-        r_user = st.text_input("Жаңы логин")
-        r_pass = st.text_input("Жаңы сыр сөз", type="password")
-        r_avatar = st.file_uploader("Аватар сүрөт жүктөө (WhatsApp сымал)", type=["png", "jpg", "jpeg"])
-        
-        if st.button("Катталуу"):
+        r_fio = st.text_input("Аты-жөнүңүз (ФИО)", key="reg_fio")
+        r_clazz = st.selectbox("Классыңыз", ["7-класс", "8-класс", "9-класс", "10-класс", "11-класс", "Студент"], key="reg_clazz")
+        r_user = st.text_input("Жаңы логин", key="reg_user")
+        r_pass = st.text_input("Жаңы сыр сөз", type="password", key="reg_pass")
+        r_avatar = st.file_uploader("Аватар сүрөт жүктөө (WhatsApp сымал)", type=["png", "jpg", "jpeg"], key="reg_avatar")
+
+        if st.button("Катталуу", key="btn_register"):
             if r_fio and r_user and r_pass:
                 avatar_b64 = ""
-                if r_avatar is not None:
-                    avatar_b64 = base64.b64encode(r_avatar.read()).decode("utf-8")
-                if register_user(r_fio, r_clazz, r_user, r_pass, avatar_b64):
