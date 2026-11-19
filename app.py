@@ -181,3 +181,119 @@ elif st.session_state["role"] == "student":
                 st.markdown(f"**{i + 1}. {q_item['q']}**")
                 ans = st.radio("Жоопту тандаңыз:", q_item["options"], key=f"radio_{i}", index=None)
                 st.session_state["answers"][i] = ans
+                st.divider()
+
+            btn_text = "Кийинки этапка өтүү ➡️" if stage < 3 else "Тестти аяктоо жана Жыйынтыкты көрүү 🏆"
+            if st.form_submit_button(btn_text):
+                st.session_state["stage"] += 1
+                st.rerun()
+    else:
+        score = sum(1 for i, item in enumerate(QUESTIONS) if st.session_state["answers"].get(i) == item["answer"])
+        total = len(QUESTIONS)
+        wrong = total - score
+        percent = round((score / total) * 100, 1)
+
+        if percent >= 85: level = "Мыкты (Алтын)"
+        elif percent >= 65: level = "Жакшы (Күмүш)"
+        elif percent >= 40: level = "Орто (Коло)"
+        else: level = "Башталгыч"
+
+        now = datetime.now().strftime("%Y-%m-%d %H:%M")
+        df_res = get_results()
+        df_res = df_res[df_res["Username"].astype(str) != str(user.get("username"))]
+        new_res = pd.DataFrame([{"ФИО": user.get("fio"), "Username": user.get("username"), "Класс": user.get("clazz"), "Убактысы": now, "Упай": f"{score}/{total}", "Процент": percent, "Деңгээли": level}])
+        pd.concat([df_res, new_res], ignore_index=True).to_csv(RESULTS_FILE, index=False)
+
+        # Online Test Pad стилиндеги графикалык көрсөткүч
+        st.subheader("📊 Тесттин жыйынтыгы")
+        st.markdown(f"""
+        <div style="background:white; padding:20px; border-radius:15px; box-shadow:0 4px 10px rgba(0,0,0,0.08); margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; font-size:18px; font-weight:bold; margin-bottom:10px;">
+                <span>Туура жооптор: {score} / {total}</span>
+                <span style="color:#38a169;">{percent}%</span>
+            </div>
+            <div style="width:100%; background:#e2e8f0; border-radius:10px; height:28px; overflow:hidden; display:flex;">
+                <div style="width:{percent}%; background:#38a169; color:white; text-align:center; line-height:28px; font-weight:bold;">{score}</div>
+                <div style="width:{100-percent}%; background:#e53e3e; color:white; text-align:center; line-height:28px; font-weight:bold;">{wrong}</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Этаптар боюнча график
+        s1 = sum(1 for i in range(0, 10) if st.session_state["answers"].get(i) == QUESTIONS[i]["answer"]) * 10
+        s2 = sum(1 for i in range(10, 20) if st.session_state["answers"].get(i) == QUESTIONS[i]["answer"]) * 10
+        s3 = sum(1 for i in range(20, 30) if st.session_state["answers"].get(i) == QUESTIONS[i]["answer"]) * 10
+        chart_df = pd.DataFrame({"Этап": ["1-этап (%)", "2-этап (%)", "3-этап (%)"], "Упай": [s1, s2, s3]}).set_index("Этап")
+        st.bar_chart(chart_df)
+
+        # Сертификат
+        cert_html = f"""
+        <div class="cert">
+            <h1 style="color:#5a67d8;">🏆 СЕРТИФИКАТ</h1>
+            <p>Python программалоо тили боюнча тестти ийгиликтүү тапшыргандыгы үчүн</p>
+            <h2>{user.get('fio')} ({user.get('clazz')})</h2>
+            <h1 style="color:#38a169;">{score} / {total} ({percent}%)</h1>
+            <h3>Деңгээли: {level}</h3>
+            <p>Күнү: {now}</p>
+        </div>
+        """
+        st.markdown(cert_html, unsafe_allow_html=True)
+
+        c1, c2 = st.columns(2)
+        with c1:
+            st.download_button("📥 Сертификатты жүктөө", data=cert_html, file_name="certificate.html", mime="text/html")
+        with c2:
+            if st.button("🔄 Тестти кайра баштоо"):
+                st.session_state["stage"] = 1
+                st.session_state["answers"] = {}
+                st.rerun()
+
+# ==========================================
+# АБАЛ 3: МУГАЛИМДИН АНАЛИТИКА ПАНЕЛИ
+# ==========================================
+elif st.session_state["role"] == "admin":
+    with st.sidebar:
+        st.title("👨‍🏫 Мугалим панели")
+        if st.button("🚪 Чыгуу"):
+            st.session_state["role"] = None
+            st.rerun()
+
+    st.title("📊 Окуучулардын жыйынтыктары")
+    df_res = get_results()
+    df_u = get_users()
+
+    if not df_res.empty:
+        col1, col2, col3 = st.columns(3)
+        col1.markdown(f'<div class="card"><h4>Катышуучулар</h4><h2>{len(df_res)}</h2></div>', unsafe_allow_html=True)
+        col2.markdown(f'<div class="card"><h4>Орточо пайыз</h4><h2>{round(df_res["Процент"].mean(), 1)}%</h2></div>', unsafe_allow_html=True)
+        col3.markdown(f'<div class="card"><h4>Эң жогорку</h4><h2>{df_res["Процент"].max()}%</h2></div>', unsafe_allow_html=True)
+
+        st.subheader("👥 Окуучулардын тизмеси (WhatsApp стилиндеги аватарлар)")
+        for _, row in df_res.iterrows():
+            u_info = df_u[df_u["username"].astype(str) == str(row["Username"])]
+            u_dict = next(iter(u_info.to_dict(orient="records")), {})
+            av = str(u_dict.get("avatar", ""))
+
+            if av and av != "nan" and len(av) > 20:
+                img_html = f'<img src="data:image/png;base64,{av}" class="avatar">'
+            else:
+                img_html = '<div style="width:50px;height:50px;border-radius:50%;background:#25D366;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:15px;">👤</div>'
+
+            st.markdown(f"""
+            <div class="student-item">
+                {img_html}
+                <div style="flex-grow:1;">
+                    <div style="font-weight:bold; font-size:17px;">{row['ФИО']} <span style="color:gray; font-size:14px;">({row['Класс']})</span></div>
+                    <div style="font-size:13px; color:#555;">Убактысы: {row['Убактысы']} | Деңгээли: <b>{row['Деңгээли']}</b></div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:20px; font-weight:bold; color:#38a169;">{row['Процент']}%</div>
+                    <div style="font-size:13px; color:gray;">Упай: {row['Упай']}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        csv_bytes = df_res.to_csv(index=False).encode("utf-8-sig")
+        st.download_button("📥 Жыйынтыктарды Excel (CSV) түрүндө жүктөө", data=csv_bytes, file_name="results.csv", mime="text/csv")
+    else:
+        st.info("Азырынча бир да окуучу тест тапшыра элек.")
