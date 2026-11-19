@@ -4,183 +4,180 @@ import os
 import base64
 from datetime import datetime
 
-# 1. Веб-сайттын негизги жөндөөлөрү
-st.set_page_config(page_title="Python тести & Аналитика", page_icon="🐍", layout="wide")
+# 1. Барактын жөндөөлөрү
+st.set_page_config(page_title="Python Тест", page_icon="🐍", layout="wide")
 
-# 2. Сессиялык абалдарды аныктоо
-if "authenticated_user" not in st.session_state:
-    st.session_state["authenticated_user"] = None
-if "user_role" not in st.session_state:
-    st.session_state["user_role"] = None
+# 2. Эс тутумду (Session State) даярдоо
+if "user" not in st.session_state:
+    st.session_state["user"] = None
+if "role" not in st.session_state:
+    st.session_state["role"] = None
 if "stage" not in st.session_state:
     st.session_state["stage"] = 1
 if "answers" not in st.session_state:
     st.session_state["answers"] = {}
 
-# 3. Сайттын CSS стилдери
+# 3. Дизайн (CSS)
 st.markdown("""
 <style>
-    .main { background-color: #f0f2f6; }
-    .card-3d {
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 25px;
-        margin: 10px 0px;
-        box-shadow: 6px 6px 8px #c5c9d1, -6px -6px 12px #ffffff;
-        text-align: center;
+    .main { background-color: #f4f6f9; }
+    .card {
+        background: white; padding: 20px; border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08); text-align: center; margin-bottom: 15px;
     }
-    .card-title { color: #5a67d8; font-size: 16px; font-weight: bold; margin-bottom: 5px; }
-    .card-value { color: #2d3748; font-size: 32px; font-weight: 900; }
-    .stButton>button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white; border-radius: 12px; padding: 10px 24px;
-        font-weight: bold; border: none;
-        box-shadow: 3px 3px 8px #b8b8b8;
-    }
-    .cert-box {
-        border: 12px double #4a5568; padding: 35px; text-align: center;
-        background: #ffffff; border-radius: 20px;
-        box-shadow: 10px 10px 25px rgba(0,0,0,0.1);
-        max-width: 750px; margin: 20px auto;
-    }
-    .stage-header {
-        background: linear-gradient(90deg, #ebf8ff 0%, #bee3f8 100%);
-        padding: 15px; border-radius: 10px;
-        color: #2b6cb0; font-weight: bold; margin-bottom: 20px;
-        border-left: 5px solid #3182ce;
-    }
-    .student-row {
+    .student-item {
         display: flex; align-items: center; background: white;
-        padding: 12px 20px; border-radius: 12px; margin-bottom: 10px;
-        box-shadow: 2px 2px 6px rgba(0,0,0,0.06);
+        padding: 12px 18px; border-radius: 12px; margin-bottom: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
-    .avatar-img {
+    .avatar {
         width: 50px; height: 50px; border-radius: 50%;
         object-fit: cover; margin-right: 15px; border: 2px solid #25D366;
+    }
+    .cert {
+        border: 10px double #4a5568; padding: 30px; text-align: center;
+        background: white; border-radius: 15px; max-width: 700px; margin: 20px auto;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 4. Базаларды түзүү жана жүктөө
-USERS_DB = "users_database.csv"
-DB_FILE = "quiz_database.csv"
+# 4. Маалымат базасы (CSV)
+USERS_FILE = "users.csv"
+RESULTS_FILE = "results.csv"
 
-if not os.path.exists(USERS_DB):
-    pd.DataFrame(columns=["fio", "clazz", "username", "password", "avatar_bytes"]).to_csv(USERS_DB, index=False)
+if not os.path.exists(USERS_FILE):
+    pd.DataFrame(columns=["fio", "clazz", "username", "password", "avatar"]).to_csv(USERS_FILE, index=False)
 
-if not os.path.exists(DB_FILE):
-    pd.DataFrame(columns=["ФИО", "Username", "Класс", "Убактысы", "Туура жооп", "Процент (%)", "Деңгээли"]).to_csv(DB_FILE, index=False)
+if not os.path.exists(RESULTS_FILE):
+    pd.DataFrame(columns=["ФИО", "Username", "Класс", "Убактысы", "Упай", "Процент", "Деңгээли"]).to_csv(RESULTS_FILE, index=False)
 
-def load_users():
+def get_users():
     try:
-        return pd.read_csv(USERS_DB)
+        return pd.read_csv(USERS_FILE)
     except Exception:
-        return pd.DataFrame(columns=["fio", "clazz", "username", "password", "avatar_bytes"])
+        return pd.DataFrame(columns=["fio", "clazz", "username", "password", "avatar"])
 
-def register_user(fio, clazz, username, password, avatar_bytes=""):
-    df = load_users()
-    if str(username).strip() in df["username"].astype(str).str.strip().values:
-        return False
-    new_user = pd.DataFrame([{
-        "fio": fio.strip(), "clazz": clazz, "username": username.strip(),
-        "password": password.strip(), "avatar_bytes": avatar_bytes
-    }])
-    df = pd.concat([df, new_user], ignore_index=True)
-    df.to_csv(USERS_DB, index=False)
-    return True
-
-def verify_user(username, password):
-    df = load_users()
-    u = str(username).strip()
-    p = str(password).strip()
-    match = df[(df["username"].astype(str).str.strip() == u) & (df["password"].astype(str).str.strip() == p)]
-    if not match.empty:
-        records = match.to_dict(orient="records")
-        return records[0]
-    return None
-
-def load_db():
+def get_results():
     try:
-        return pd.read_csv(DB_FILE)
+        return pd.read_csv(RESULTS_FILE)
     except Exception:
-        return pd.DataFrame(columns=["ФИО", "Username", "Класс", "Убактысы", "Туура жооп", "Процент (%)", "Деңгээли"])
+        return pd.DataFrame(columns=["ФИО", "Username", "Класс", "Убактысы", "Упай", "Процент", "Деңгээли"])
 
-def save_to_db(fio, username, clazz, time_str, score_str, percent, level):
-    df = load_db()
-    if str(username) in df["Username"].astype(str).values:
-        df.loc[df["Username"].astype(str) == str(username), ["ФИО", "Класс", "Убактысы", "Туура жооп", "Процент (%)", "Деңгээли"]] = [
-            fio, clazz, time_str, score_str, percent, level
-        ]
-    else:
-        new_row = pd.DataFrame([{
-            "ФИО": fio, "Username": username, "Класс": clazz, "Убактысы": time_str,
-            "Туура жооп": score_str, "Процент (%)": percent, "Деңгээли": level
-        }])
-        df = pd.concat([df, new_row], ignore_index=True)
-    df.to_csv(DB_FILE, index=False)
-
-# 5. Тест суроолору (30 суроо — 3 этапка бөлүнөт)
+# 5. Суроолор (30 суроо = 3 этап x 10 суроо)
 QUESTIONS = [
     {"q": "Pythonдо кайсы өзгөрмөнүн аты ката жазылган?", "options": ["my_var", "_age", "userAge", "1st_place"], "answer": "1st_place"},
     {"q": "Pythonдо 5 / 2 туюнтмасы кандай типти кайтарат?", "options": ["int", "float", "str", "bool"], "answer": "float"},
     {"q": "print('A' * 2) буйругу экранга эмнени чыгарат?", "options": ["A * 2", "A 2", "AA", "Ката кетет"], "answer": "AA"},
     {"q": "Тизменин аягына элемент кошуучу метод кайсы?", "options": ["add()", "append()", "push()", "insert()"], "answer": "append()"},
     {"q": "print('A', 'B', sep='-') эмнени чыгарат?", "options": ["A B", "A,B", "A-B", "AB"], "answer": "A-B"},
-    {"q": "input() аркылуу кирген маалымат демейки боюнча кайсы типте болот?", "options": ["str", "int", "float", "list"], "answer": "str"},
+    {"q": "input() аркылуу кирген маалымат кайсы типте болот?", "options": ["str", "int", "float", "list"], "answer": "str"},
     {"q": "len('ABC') функциясы кандай маани берет?", "options": ["1", "2", "3", "0"], "answer": "3"},
     {"q": "Pythonдо 17 % 5 туюнтмасынын калдыгы канча?", "options": ["3", "2", "1", "5"], "answer": "2"},
-    {"q": "Шарттуу операторду (эгерде) ачуучу ачкыч сөз кайсы?", "options": ["if", "else", "for", "while"], "answer": "if"},
+    {"q": "Шарттуу операторду ачуучу ачкыч сөз кайсы?", "options": ["if", "else", "for", "while"], "answer": "if"},
     {"q": "Барабарлыкты текшерүүчү операторду көрсөтүңүз?", "options": ["=", "===", "is", "=="], "answer": "=="},
 
     {"q": "Pythonдо логикалык 'ЖАНА' оператору кайсы?", "options": ["&&", "and", "AND", "not"], "answer": "and"},
-    {"q": "Pythonдо логикалык 'ЖЕ' оператору кайсы сөз?", "options": ["||", "or", "OR", "xor"], "answer": "or"},
+    {"q": "Pythonдо логикалык 'ЖЕ' оператору кайсы?", "options": ["||", "or", "OR", "xor"], "answer": "or"},
     {"q": "Кайсы маалымат тиби өзгөрүлбөйт (immutable)?", "options": ["list", "dict", "set", "tuple"], "answer": "tuple"},
     {"q": "Сапты бүтүн санга айландыруучу функция?", "options": ["str()", "int()", "float()", "num()"], "answer": "int()"},
-    {"q": "Коддогу бир саптуу комментарий кайсы символ менен башталат?", "options": ["//", "/*", "#", "--"], "answer": "#"},
+    {"q": "Бир саптуу комментарий кайсы символ менен башталат?", "options": ["//", "/*", "#", "--"], "answer": "#"},
     {"q": "for i in range(3): циклы канча жолу айланат?", "options": ["2 жолу", "3 жолу", "4 жолу", "Чексиз"], "answer": "3 жолу"},
     {"q": "range(3) функциясы кайсы сандарды берет?", "options": ["1, 2, 3", "0, 1, 2", "0, 1, 2, 3", "1, 2"], "answer": "0, 1, 2"},
-    {"q": "Төмөнкүлөрдүн кайсынысы сөздүк (dictionary) болуп саналат?", "options": ["{1, 2}", "list(1, 2)", "(1, 2)", "{'a': 1}"], "answer": "{'a': 1}"},
+    {"q": "Кайсынысы сөздүк (dictionary) болуп саналат?", "options": ["{1, 2}", "list(1, 2)", "(1, 2)", "{'a': 1}"], "answer": "{'a': 1}"},
     {"q": "Сөздүктөн ачкычтарды алуучу метод кайсы?", "options": ["keys()", "values()", "items()", "get()"], "answer": "keys()"},
-    {"q": "Жеке функция түзүү үчүн кайсы ачкыч сөз колдонулат?", "options": ["function", "fun", "def", "define"], "answer": "def"},
+    {"q": "Функция түзүү үчүн кайсы ачкыч сөз колдонулат?", "options": ["function", "fun", "def", "define"], "answer": "def"},
 
     {"q": "Функциядан маани кайтаруучу ачкыч сөз?", "options": ["give", "return", "back", "exit"], "answer": "return"},
-    {"q": "Python тили биринчи жолу кайсы жылы чыккан?", "options": ["1991", "2000", "1985", "1995"], "answer": "1991"},
+    {"q": "Python тили кайсы жылы чыккан?", "options": ["1991", "2000", "1985", "1995"], "answer": "1991"},
     {"q": "Python тилинин автору ким?", "options": ["Гвидо ван Россум", "Джеймс Гослинг", "Деннис Ритчи", "Линус Торвальдс"], "answer": "Гвидо ван Россум"},
     {"q": "Тизмедеги элементти индекси менен өчүрүүчү оператор?", "options": ["remove", "del", "clear", "pop_index"], "answer": "del"},
     {"q": "Тизменин эң акыркы элементинин индекси канча?", "options": ["0", "1", "-1", "last"], "answer": "-1"},
-    {"q": "Шарттуу оператордогу 'же андай эмес болсо' сөзү кандай кыскартылат?", "options": ["elseif", "elif", "elsif", "else_if"], "answer": "elif"},
+    {"q": "'Же андай эмес болсо' сөзү кандай кыскартылат?", "options": ["elseif", "elif", "elsif", "else_if"], "answer": "elif"},
     {"q": "while циклы качан ишин токтотот?", "options": ["True болгондо", "False болгондо", "Биринчи айланууда", "Эч качан"], "answer": "False болгондо"},
     {"q": "Циклди дароо токтотуп чыгуучу оператор кайсы?", "options": ["continue", "stop", "break", "exit"], "answer": "break"},
     {"q": "Циклдин учурдагы кадамын өткөрүп жиберүүчү оператор?", "options": ["pass", "break", "skip", "continue"], "answer": "continue"},
-    {"q": "Каталарды кармоо (иштетүү) үчүн кайсы блок колдонулат?", "options": ["try / except", "do / catch", "error / fix", "if / error"], "answer": "try / except"}
+    {"q": "Каталарды кармоо үчүн кайсы блок колдонулат?", "options": ["try / except", "do / catch", "error / fix", "if / error"], "answer": "try / except"}
 ]
 
-# 6. КИРҮҮ ЖАНА КАТТАЛУУ БЕТИ
-if st.session_state["authenticated_user"] is None or st.session_state["user_role"] is None:
-    st.title("🐍 Python Билимди Текшерүү Платформасы")
-    tab1, tab2, tab3 = st.tabs(["🔑 Окуучу кирүү", "📝 Катталуу", "👨‍🏫 Мугалим панели"])
+# ==========================================
+# АБАЛ 1: КИРҮҮ ЖАНА КАТТАЛУУ БАРАГЫ
+# ==========================================
+if st.session_state["role"] is None:
+    st.title("🐍 Python Онлайн Тест Платформасы")
+    t1, t2, t3 = st.tabs(["🔑 Окуучу кирүү", "📝 Катталуу", "👨‍🏫 Мугалим панели"])
 
-    with tab1:
-        u_name = st.text_input("Логин", key="login_u")
-        u_pass = st.text_input("Сыр сөз", type="password", key="login_p")
-        if st.button("Кирүү", key="btn_student_login"):
-            user = verify_user(u_name, u_pass)
-            if user:
-                st.session_state["authenticated_user"] = user
-                st.session_state["user_role"] = "student"
+    with t1:
+        login_u = st.text_input("Логин")
+        login_p = st.text_input("Сыр сөз", type="password")
+        if st.button("Кирүү"):
+            df_u = get_users()
+            found = df_u[(df_u["username"].astype(str) == str(login_u).strip()) & (df_u["password"].astype(str) == str(login_p).strip())]
+            user_dict = next(iter(found.to_dict(orient="records")), None)
+            if user_dict is not None:
+                st.session_state["user"] = user_dict
+                st.session_state["role"] = "student"
                 st.session_state["stage"] = 1
                 st.session_state["answers"] = {}
                 st.rerun()
             else:
                 st.error("Логин же сыр сөз туура эмес! Алгач 'Катталуу' бөлүмүнөн катталыңыз.")
 
-    with tab2:
-        r_fio = st.text_input("Аты-жөнүңүз (ФИО)", key="reg_fio")
-        r_clazz = st.selectbox("Классыңыз", ["7-класс", "8-класс", "9-класс", "10-класс", "11-класс", "Студент"], key="reg_clazz")
-        r_user = st.text_input("Жаңы логин", key="reg_user")
-        r_pass = st.text_input("Жаңы сыр сөз", type="password", key="reg_pass")
-        r_avatar = st.file_uploader("Аватар сүрөт жүктөө (WhatsApp сымал)", type=["png", "jpg", "jpeg"], key="reg_avatar")
-
-        if st.button("Катталуу", key="btn_register"):
+    with t2:
+        r_fio = st.text_input("Аты-жөнүңүз (ФИО)")
+        r_clazz = st.selectbox("Классыңыз", ["7-класс", "8-класс", "9-класс", "10-класс", "11-класс", "Студент"])
+        r_user = st.text_input("Жаңы логин түзүңүз")
+        r_pass = st.text_input("Сыр сөз түзүңүз", type="password")
+        r_img = st.file_uploader("Аватар сүрөт (WhatsApp сымал)", type=["png", "jpg", "jpeg"])
+        if st.button("Катталуу"):
             if r_fio and r_user and r_pass:
-                avatar_b64 = ""
+                df_u = get_users()
+                if str(r_user).strip() in df_u["username"].astype(str).values:
+                    st.warning("Бул логин мурун алынган, башка логин жазыңыз.")
+                else:
+                    img_b64 = base64.b64encode(r_img.read()).decode("utf-8") if r_img else ""
+                    new_row = pd.DataFrame([{"fio": r_fio.strip(), "clazz": r_clazz, "username": r_user.strip(), "password": r_pass.strip(), "avatar": img_b64}])
+                    pd.concat([df_u, new_row], ignore_index=True).to_csv(USERS_FILE, index=False)
+                    st.success("Каттоо ийгиликтүү өттү! Эми 'Окуучу кирүү' бөлүмүнө өтүп кириңиз.")
+            else:
+                st.warning("Бардык талааларды толтуруңуз!")
+
+    with t3:
+        admin_p = st.text_input("Мугалимдин сыр сөзү (admin123)", type="password")
+        if st.button("Мугалим панелине кирүү"):
+            if admin_p == "admin123":
+                st.session_state["role"] = "admin"
+                st.rerun()
+            else:
+                st.error("Сыр сөз туура эмес!")
+
+# ==========================================
+# АБАЛ 2: ОКУУЧУНУН 3 ЭТАПТУУ ТЕСТ БАРАГЫ
+# ==========================================
+elif st.session_state["role"] == "student":
+    user = st.session_state["user"]
+
+    with st.sidebar:
+        av = str(user.get("avatar", ""))
+        if av and av != "nan" and len(av) > 20:
+            st.markdown(f'<img src="data:image/png;base64,{av}" style="width:85px;height:85px;border-radius:50%;object-fit:cover;border:3px solid #25D366;">', unsafe_allow_html=True)
+        st.subheader(f"👤 {user.get('fio', '')}")
+        st.write(f"📚 Класс: **{user.get('clazz', '')}**")
+        if st.button("🚪 Чыгуу"):
+            st.session_state["user"] = None
+            st.session_state["role"] = None
+            st.rerun()
+
+    st.title("📝 Python боюнча 3 этаптуу тест")
+    stage = st.session_state["stage"]
+
+    if stage <= 3:
+        start = (stage - 1) * 10
+        end = stage * 10
+        st.info(f"🚀 **{stage}-этап** (Суроолор: {start + 1} — {end})")
+
+        with st.form(f"form_stage_{stage}"):
+            for i in range(start, end):
+                q_item = QUESTIONS[i]
+                st.markdown(f"**{i + 1}. {q_item['q']}**")
+                ans = st.radio("Жоопту тандаңыз:", q_item["options"], key=f"radio_{i}", index=None)
+                st.session_state["answers"][i] = ans
